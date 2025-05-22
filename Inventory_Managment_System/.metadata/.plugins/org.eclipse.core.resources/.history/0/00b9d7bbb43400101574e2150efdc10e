@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>
+   Login Page
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+    body {
+      font-family: "Inter", sans-serif;
+    }
+  </style>
+ </head>
+ <body class="bg-white min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-7xl w-full flex flex-col md:flex-row items-center md:items-start justify-between gap-6 md:gap-20">
+   <!-- Left side form container -->
+   <div class="w-full max-w-md">
+    <div class="mb-8">
+     <div class="w-8 h-8 bg-cyan-300">
+     </div>
+    </div>
+    <h1 class="text-black text-xl font-normal mb-2">
+     Login
+    </h1>
+    <p class="text-xs text-black mb-6">
+     See your growth and get support!
+    </p>
+    <button class="w-full flex items-center justify-center gap-2 border border-black rounded-full py-2 px-4 text-xs text-black mb-6 hover:bg-gray-100 transition" type="button">
+     <span>
+      Sign in with google
+     </span>
+     <img alt="Google logo letter G in blue, red, yellow and green colors" class="w-5 h-5" height="20" src="https://storage.googleapis.com/a1aa/image/70ad279b-b8e9-4873-2ea3-b8a77738bf1d.jpg" width="20"/>
+    </button>
+    <form>
+     <label class="block text-xs text-black mb-1 font-normal" for="email">
+      Email*
+     </label>
+     <input class="w-full mb-4 text-xs text-black placeholder:text-black/50 bg-gray-100 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-300" id="email" placeholder="Enter your email" required="" type="email"/>
+     <label class="block text-xs text-black mb-1 font-normal" for="password">
+      Password*
+     </label>
+     <input class="w-full mb-4 text-xs text-black placeholder:text-black/50 bg-gray-100 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-300" id="password" placeholder="minimum 8 characters" required="" type="password"/>
+     <div class="flex items-center justify-between mb-6 text-xs text-black font-normal">
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+       <input class="w-4 h-4 border border-black rounded-sm cursor-pointer" type="checkbox"/>
+       Remember me
+      </label>
+      <a class="text-cyan-900 hover:underline" href="#">
+       Forgot password?
+      </a>
+     </div>
+     <button class="w-full bg-cyan-900 text-white text-xs rounded-full py-3" type="submit">
+      Login
+     </button>
+    </form>
+    <p class="mt-6 text-xs text-black font-normal">
+     Not regestered yet?
+     <a class="text-black font-semibold hover:underline" href="#">
+      Create a new account
+     </a>
+    </p>
+   </div>
+   <!-- Right side image -->
+   <div class="flex-1 max-w-4xl">
+    <img alt="Illustration of people working with data and charts on floating platforms with a white and light orange color scheme" class="w-full h-auto object-contain" height="400" src="https://storage.googleapis.com/a1aa/image/fd155d54-0da3-4536-164e-877d61d37f7b.jpg" width="800"/>
+   </div>
+  </div>
+ </body>
+</html>
