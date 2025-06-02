@@ -1,0 +1,3 @@
+INDEX VERSION 1.134
+C:\Users\aditi\OneDrive\Desktop\Paper_inventory\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\2760758369.index
+\Paper_inventory\src\main\java
