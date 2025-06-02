@@ -1,0 +1,149 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.text.SimpleDateFormat, java.io.StringWriter, java.io.PrintWriter, java.sql.*, com.mysql.cj.jdbc.Driver" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<%! 
+    // Generate unique IDs with prefix + timestamp + 3 random digits
+    public String generateUniqueId(String prefix) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+        String dateTime = sdf.format(new java.util.Date());
+        int random = (int) (Math.random() * 900) + 100;
+        return prefix + dateTime + random;
+    }
+%>
+
+<%
+    String retailerId = request.getParameter("retailerId");
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] unitPrices = request.getParameterValues("unitPrice[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+    String[] subtotals = request.getParameterValues("subtotal[]");
+
+    if (retailerId == null || retailerId.trim().isEmpty()) {
+        out.println("<script>alert('Retailer ID is missing!'); window.history.back();</script>");
+        return;
+    }
+    if (productIds == null || productIds.length == 0) {
+        out.println("<script>alert('No products selected!'); window.history.back();</script>");
+        return;
+    }
+
+    Connection con = null;
+    PreparedStatement psOrder = null, psOrderItem = null, psUpdateStock = null;
+    PreparedStatement psInsertBilling = null, psUpdateBillingId = null, psUpdateTotal = null;
+
+    double totalAmount = 0.0;
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        // Change URL/user/password as per your setup
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+        con.setAutoCommit(false); // Start transaction
+
+        String orderId = generateUniqueId("ORD");
+        String billingId = generateUniqueId("BILL");
+
+        // Insert into orders: id, retailer_id, order_date, status, total_amount, billing_id
+        String insertOrderSQL = "INSERT INTO orders (id, retailer_id, order_date, status, total_amount, billing_id) VALUES (?, ?, NOW(), 'Pending', 0, NULL)";
+        psOrder = con.prepareStatement(insertOrderSQL);
+        psOrder.setString(1, orderId);
+        psOrder.setString(2, retailerId);
+        psOrder.executeUpdate();
+
+        String insertItem = "INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?)";
+        psOrderItem = con.prepareStatement(insertItem);
+
+        psUpdateStock = con.prepareStatement("UPDATE product SET quantity_in_stock = quantity_in_stock - ? WHERE product_id = ?");
+
+        for (int i = 0; i < productIds.length; i++) {
+            if (productIds[i] == null || productIds[i].trim().isEmpty() ||
+                quantities[i] == null || quantities[i].trim().isEmpty() ||
+                unitPrices[i] == null || unitPrices[i].trim().isEmpty() ||
+                subtotals[i] == null || subtotals[i].trim().isEmpty()) {
+                continue;
+            }
+
+            String orderItemId = generateUniqueId("ITEM");
+            int pid = Integer.parseInt(productIds[i].trim());
+            int qty = Integer.parseInt(quantities[i].trim());
+            double price = Double.parseDouble(unitPrices[i].trim());
+            double subtotal = Double.parseDouble(subtotals[i].trim());
+
+            totalAmount += subtotal;
+
+            psOrderItem.setString(1, orderItemId);
+            psOrderItem.setString(2, orderId);
+            psOrderItem.setInt(3, pid);
+            psOrderItem.setInt(4, qty);
+            psOrderItem.setDouble(5, price);
+            psOrderItem.setDouble(6, subtotal);
+            psOrderItem.executeUpdate();
+
+            psUpdateStock.setInt(1, qty);
+            psUpdateStock.setInt(2, pid);
+            psUpdateStock.executeUpdate();
+        }
+
+        // Update total_amount in orders table
+        String updateTotalSQL = "UPDATE orders SET total_amount = ? WHERE id = ?";
+        psUpdateTotal = con.prepareStatement(updateTotalSQL);
+        psUpdateTotal.setDouble(1, totalAmount);
+        psUpdateTotal.setString(2, orderId);
+        psUpdateTotal.executeUpdate();
+
+        // Insert billing info (assuming billing table exists with id, order_id, billing_date, amount)
+        String insertBillingSQL = "INSERT INTO billing (id, order_id, billing_date, amount) VALUES (?, ?, NOW(), ?)";
+        psInsertBilling = con.prepareStatement(insertBillingSQL);
+        psInsertBilling.setString(1, billingId);
+        psInsertBilling.setString(2, orderId);
+        psInsertBilling.setDouble(3, totalAmount);
+        psInsertBilling.executeUpdate();
+
+        // Update orders table to set billing_id
+        String updateBillingIdSQL = "UPDATE orders SET billing_id = ? WHERE id = ?";
+        psUpdateBillingId = con.prepareStatement(updateBillingIdSQL);
+        psUpdateBillingId.setString(1, billingId);
+        psUpdateBillingId.setString(2, orderId);
+        psUpdateBillingId.executeUpdate();
+
+        con.commit();
+
+        out.println("<script>alert('Order placed and billing generated successfully!'); window.location='Order.jsp';</script>");
+
+    } catch (Exception e) {
+        if (con != null) {
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                out.println("<pre>Error during rollback: " + ex.getMessage() + "</pre>");
+            }
+        }
+        out.println("<pre>Error: " + e.getMessage() + "</pre>");
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        out.println("<pre>" + sw.toString() + "</pre>");
+    } finally {
+        try {
+            if (psOrder != null) psOrder.close();
+            if (psOrderItem != null) psOrderItem.close();
+            if (psUpdateStock != null) psUpdateStock.close();
+            if (psInsertBilling != null) psInsertBilling.close();
+            if (psUpdateBillingId != null) psUpdateBillingId.close();
+            if (psUpdateTotal != null) psUpdateTotal.close();
+            if (con != null) con.close();
+        } catch (SQLException ex) {
+            out.println("<pre>Error closing resources: " + ex.getMessage() + "</pre>");
+        }
+    }
+%>
+
+</body>
+</html>

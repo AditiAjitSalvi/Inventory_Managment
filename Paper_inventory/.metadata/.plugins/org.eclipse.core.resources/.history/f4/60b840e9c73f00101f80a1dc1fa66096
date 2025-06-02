@@ -1,0 +1,142 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.text.SimpleDateFormat, java.io.StringWriter, java.io.PrintWriter, java.sql.*, com.mysql.cj.jdbc.Driver" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<%! 
+    // Utility function to generate unique IDs with prefix + datetime + random digits
+    public String generateUniqueId(String prefix) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+        String dateTime = sdf.format(new java.util.Date());
+        int random = (int) (Math.random() * 900) + 100; // 3-digit random number
+        return prefix + dateTime + random;
+    }
+%>
+
+<%
+    String retailerId = request.getParameter("retailerId");
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] unitPrices = request.getParameterValues("unitPrice[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+    String[] subtotals = request.getParameterValues("subtotal[]");
+
+    if (retailerId == null || retailerId.trim().isEmpty()) {
+        out.println("<script>alert('Retailer ID is missing!'); window.history.back();</script>");
+        return;
+    }
+    if (productIds == null || productIds.length == 0) {
+        out.println("<script>alert('No products selected!'); window.history.back();</script>");
+        return;
+    }
+
+    Connection con = null;
+    PreparedStatement psOrder = null, psOrderItem = null, psUpdateStock = null, psUpdateTotal = null;
+    PreparedStatement psInsertBilling = null, psUpdateBillingId = null;
+
+    double totalAmount = 0.0;
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+        con.setAutoCommit(false); // Start transaction
+
+        // Generate unique IDs
+        String orderId = generateUniqueId("ORD");
+        String billingId = generateUniqueId("BILL");
+
+        // Insert into orders table
+        String insertOrder = "INSERT INTO orders (id, retailer_id, order_date, status, total_amount) VALUES (?, ?, NOW(), 'Pending', 0)";
+        psOrder = con.prepareStatement(insertOrder);
+        psOrder.setString(1, orderId);
+        psOrder.setString(2, retailerId);
+        psOrder.executeUpdate();
+
+        // Insert into order_items and update stock
+        String insertItem = "INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?)";
+        psOrderItem = con.prepareStatement(insertItem);
+        psUpdateStock = con.prepareStatement("UPDATE products SET quantity_in_stock = quantity_in_stock - ? WHERE product_id = ?");
+
+        for (int i = 0; i < productIds.length; i++) {
+        	for (int i = 0; i < productIds.length; i++) {
+        	    if (productIds[i] == null || productIds[i].trim().isEmpty() ||
+        	        quantities[i] == null || quantities[i].trim().isEmpty() ||
+        	        unitPrices[i] == null || unitPrices[i].trim().isEmpty() ||
+        	        subtotals[i] == null || subtotals[i].trim().isEmpty()) {
+        	        continue;  // Skip invalid entries
+        	    }
+
+        	    String orderItemId = generateUniqueId("ITEM");
+
+        	    int pid = Integer.parseInt(productIds[i].trim()); // Trim spaces before parsing
+        	    int qty = Integer.parseInt(quantities[i].trim());
+        	    double price = Double.parseDouble(unitPrices[i].trim());
+        	    double subtotal = Double.parseDouble(subtotals[i].trim());
+            totalAmount += subtotal;
+
+            psOrderItem.setString(1, orderItemId);
+            psOrderItem.setString(2, orderId);
+            psOrderItem.setInt(3, pid);
+            psOrderItem.setInt(4, qty);
+            psOrderItem.setDouble(5, price);
+            psOrderItem.setDouble(6, subtotal);
+            psOrderItem.executeUpdate();
+
+            psUpdateStock.setInt(1, qty);
+            psUpdateStock.setInt(2, pid);
+            psUpdateStock.executeUpdate();
+        }
+
+        // Update total_amount in orders
+        String updateTotal = "UPDATE orders SET total_amount = ? WHERE id = ?";
+        psUpdateTotal = con.prepareStatement(updateTotal);
+        psUpdateTotal.setDouble(1, totalAmount);
+        psUpdateTotal.setString(2, orderId);
+        psUpdateTotal.executeUpdate();
+
+        // Insert into billing table
+        String insertBilling = "INSERT INTO billing (billing_id, order_id, billing_date, total_amount) VALUES (?, ?, NOW(), ?)";
+        psInsertBilling = con.prepareStatement(insertBilling);
+        psInsertBilling.setString(1, billingId);
+        psInsertBilling.setString(2, orderId);
+        psInsertBilling.setDouble(3, totalAmount);
+        psInsertBilling.executeUpdate();
+
+        // Update orders with billing_id
+        String updateOrderBilling = "UPDATE orders SET billing_id = ? WHERE id = ?";
+        psUpdateBillingId = con.prepareStatement(updateOrderBilling);
+        psUpdateBillingId.setString(1, billingId);
+        psUpdateBillingId.setString(2, orderId);
+        psUpdateBillingId.executeUpdate();
+
+        con.commit(); // Commit transaction
+
+        out.println("<script>alert('Order placed and billing generated successfully!'); window.location='Order.jsp';</script>");
+
+    } catch (Exception e) {
+        try {
+            con.rollback(); // Rollback if error occurs
+        } catch (SQLException ex) {
+            out.println("<pre>Error rolling back: " + ex.getMessage() + "</pre>");
+        }
+
+        out.println("<pre>Error: " + e.getMessage() + "</pre>");
+    } finally {
+        try {
+            if (psInsertBilling != null) psInsertBilling.close();
+            if (psUpdateBillingId != null) psUpdateBillingId.close();
+            if (con != null) con.close();
+        } catch (SQLException ex) {
+            out.println("<pre>Error closing resources: " + ex.getMessage() + "</pre>");
+        }
+    }
+%>
+
+</body>
+</html>

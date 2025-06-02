@@ -1,0 +1,179 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Place Order</h2>
+    <form action="SaveOrderServlet" method="post">
+
+        <!-- Retailer Dropdown -->
+        <div class="form-group mb-3">
+            <label for="retailer">Select Retailer:</label>
+            <select class="form-control" id="retailer" name="retailerId" required onchange="setCustomerFromRetailer()">
+                <option value="" disabled selected>Choose Retailer</option>
+                <%
+                    try {
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
+                        while (rs.next()) {
+                %>
+                <option value="<%=rs.getInt("id")%>" data-contact="<%=rs.getString("contact_name")%>">
+                    <%=rs.getString("name")%>
+                </option>
+                <%
+                        }
+                        con.close();
+                    } catch (Exception e) {
+                        out.println("Error loading retailers.");
+                    }
+                %>
+            </select>
+        </div>
+
+        <!-- Auto-filled Customer Contact Name -->
+        <div class="form-group mb-3">
+            <label for="customer">Customer Contact Name:</label>
+            <input type="text" class="form-control" id="customer" name="customerName" readonly />
+        </div>
+
+        <!-- Product Dropdown -->
+        <div class="form-group mb-3">
+            <label for="product">Select Product:</label>
+            <select class="form-control" id="product">
+                <%
+                    try {
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+                        while (rs.next()) {
+                %>
+                <option value="<%=rs.getInt("product_id")%>"><%=rs.getString("product_name")%></option>
+                <%
+                        }
+                        con.close();
+                    } catch (Exception e) {
+                        out.println("Error loading products.");
+                    }
+                %>
+            </select>
+        </div>
+
+        <!-- Price and Quantity Inputs -->
+        <div class="form-group mb-3">
+            <label for="price">Unit Price:</label>
+            <input type="number" class="form-control" id="price" step="0.01">
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="quantity">Quantity:</label>
+            <input type="number" class="form-control" id="quantity">
+        </div>
+
+        <button type="button" class="btn btn-success mb-3" onclick="addProduct()">Add Product</button>
+
+        <!-- Product Table -->
+        <table class="table table-bordered" id="productTable">
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- JS will populate rows -->
+            </tbody>
+        </table>
+
+        <!-- Total -->
+        <div class="form-group">
+            <h5>Total: ₹ <span id="total">0.00</span></h5>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary">Submit Order</button>
+    </form>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function setCustomerFromRetailer() {
+        var retailerSelect = document.getElementById("retailer");
+        var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+        var contactName = selectedOption.getAttribute("data-contact");
+        document.getElementById("customer").value = contactName;
+    }
+
+   
+	let totalAmount = 0;
+
+	function addProduct() {
+		const productDropdown = document.getElementById("product");
+		const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+		const productName = selectedOption.text;
+		const productId = selectedOption.value;
+
+		const priceInput = document.getElementById("price");
+		const quantityInput = document.getElementById("quantity");
+
+		const price = parseFloat(priceInput.value);
+		const quantity = parseInt(quantityInput.value);
+
+		if (!price || !quantity || price <= 0 || quantity <= 0) {
+			alert("Please enter valid price and quantity");
+			return;
+		}
+
+		const subtotal = price * quantity;
+		totalAmount += subtotal;
+
+		// Add row to table
+		const tableBody = document.getElementById("productTable").getElementsByTagName("tbody")[0];
+		const newRow = tableBody.insertRow();
+
+		const productCell = newRow.insertCell(0);
+		const priceCell = newRow.insertCell(1);
+		const quantityCell = newRow.insertCell(2);
+		const subtotalCell = newRow.insertCell(3);
+
+		productCell.innerText = productName;
+		priceCell.innerText = price.toFixed(2);
+		quantityCell.innerText = quantity;
+		subtotalCell.innerText = subtotal.toFixed(2);
+
+		// Update total amount
+		document.getElementById("total").innerText = totalAmount.toFixed(2);
+
+		// Optional: clear fields
+		priceInput.value = "";
+		quantityInput.value = "";
+	}
+</script>
+
+</body>
+</html>

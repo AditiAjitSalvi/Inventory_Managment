@@ -1,5 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+	pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -272,23 +278,16 @@ body {
 						class="profile-image"> <span class="owner-name">Owner</span>
 					</a>
 				</div>
-				<a href="Home.html" class="sidebar-link active"> 
-				<i class="fa fa-home"></i>
-					<span class="link-text">Home</span>
-				</a> 
-				<a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+				<a href="Home.html" class="sidebar-link active"> <i
+					class="fa fa-home"></i> <span class="link-text">Home</span>
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
 					<span class="link-text">Analytics</span>
-				</a> 
-				<a href="Product.jsp" class="sidebar-link">
-				 <i class="fa fa-shopping-bag"></i>
-				  <span class="link-text">Products</span>
-				</a>
-				 <a href="Retailer.jsp" class="sidebar-link"> 
-				 <i class="fa fa-users"></i> <span
-					class="link-text">Retailer</span> 
-					<a href="Order.jsp" class="sidebar-link">
-					 <i class="fa fa-shopping-cart"></i> 
-					 <span 	class="link-text">Orders</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i
+					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
+					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
+					href="Order.jsp" class="sidebar-link"> <i
+						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
 				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
@@ -300,279 +299,280 @@ body {
 			</div>
 		</div>
 
-		<!-- Main Content -->
-		<div class="main-content">
-			<div class="orders-container">
-				<div class="d-flex justify-content-between align-items-center mb-4">
-					<h2 class="m-0">Orders</h2>
-					<div class="btn-group">
-						<button class="btn btn-outline-primary me-2">Export to
-							excel</button>
-						<button class="btn btn-outline-primary me-2">Import
-							Orders</button>
-						<button class="btn btn-primary">+ New Orders</button>
-					</div>
-				</div>
 
-				<div class="d-flex justify-content-between align-items-center mb-4">
-					<div class="search-wrapper">
-						<div class="input-group">
-							<span class="input-group-text bg-white border-end-0"> <i
-								class="fa fa-search text-muted"></i>
-							</span> <input type="text" class="form-control border-start-0"
-								placeholder="Search orders...">
-						</div>
-					</div>
-					<div class="d-flex">
-						<button class="btn btn-outline-secondary me-2">
-							<i class="fa fa-calendar me-1"></i> <span>Sales</span> <i
-								class="fa fa-chevron-down ms-1"></i>
-						</button>
-						<button class="btn btn-outline-secondary me-2">
-							<span>Status</span> <i class="fa fa-chevron-down ms-1"></i>
-						</button>
-						<button class="btn btn-outline-secondary">
-							<i class="fa fa-filter me-1"></i> <span>Filter</span>
-						</button>
-					</div>
-				</div>
-				<div class="d-flex"
-					style="right: 50px; top: 150px; display: flex; gap: 10px; margin-left: 980px;">
-					<button class="btn btn-outline-primary me-2">
-						<i class="fa fa-edit me-1"></i> <span>Update</span>
-					</button>
-					<button class="btn btn-outline-danger">
-						<i class="fa fa-trash me-1"></i> <span>Delete</span>
-					</button>
-				</div>
+		<div class="container">
+			<h2>Place Order</h2>
+			<form action="SaveOrder.jsp" method="post" id="orderForm" >
 
 
-				<div class="card">
-					<div class="card-body p-0">
-						<div class="table-responsive">
-							<table class="table order-table mb-0">
-								<thead>
-									<tr>
-										<th>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"
-													id="selectAll"> <label class="form-check-label"
-													for="selectAll"></label>
-											</div>
-										</th>
-										<th>Order ID</th>
-										<th>Date</th>
-										<th>Customer</th>
-										<th>Sales channel</th>
-										<th>Destination</th>
-										<th>Items</th>
-										<th>Status</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#7576</td>
-										<td>06/20/2022</td>
-										<td>Ramesh Choudhary</td>
-										<td>Store name</td>
-										<td>Udaipur</td>
-										<td>3</td>
-										<td><span class="status completed">Completed</span></td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#7576</td>
-										<td>06/20/2022</td>
-										<td>Ramesh Choudhary</td>
-										<td>Store name</td>
-										<td>Udaipur</td>
-										<td>3</td>
-										<td><span class="status pending">Pending</span></td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#7576</td>
-										<td>06/20/2022</td>
-										<td>Ramesh Choudhary</td>
-										<td>Store name</td>
-										<td>Udaipur</td>
-										<td>3</td>
-										<td><span class="status completed">Completed</span></td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#7576</td>
-										<td>06/20/2022</td>
-										<td>Ramesh Choudhary</td>
-										<td>Store name</td>
-										<td>Udaipur</td>
-										<td>3</td>
-										<td><span class="status completed">Completed</span></td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#7576</td>
-										<td>06/20/2022</td>
-										<td>Ramesh Choudhary</td>
-										<td>Store name</td>
-										<td>Udaipur</td>
-										<td>3</td>
-										<td><span class="status completed">Completed</span></td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
+				<!-- Retailer Dropdown -->
+				<div class="form-group mb-3">
+					<label for="retailer">Select Retailer:</label> <select
+						class="form-control" id="retailer" name="retailerId" required
+						onchange="setCustomerFromRetailer()">
+						<option value="" disabled selected>Choose Retailer</option>
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("id")%>"
+							data-contact="<%=rs.getString("contact_name")%>">
+							<%=rs.getString("name")%>
+						</option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading retailers.");
+						}
+						%>
+					</select>
 				</div>
-			</div>
+
+				<!-- Auto-filled Customer Contact Name -->
+				<div class="form-group mb-3">
+					<label for="customer">Customer Contact Name:</label> <input
+						type="text" class="form-control" id="customer" name="customerName"
+						readonly />
+				</div>
+
+				<!-- Product Dropdown -->
+				<div class="form-group mb-3">
+					<label for="product">Select Product:</label> <select
+						class="form-control" id="product">
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("product_id")%>"><%=rs.getString("product_name")%></option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading products.");
+						}
+						%>
+					</select>
+				</div>
+
+				<!-- Price and Quantity Inputs -->
+				<div class="form-group mb-3">
+					<label for="price">Unit Price:</label> <input type="number"
+						class="form-control" id="price" step="0.01">
+				</div>
+
+				<div class="form-group mb-3">
+					<label for="quantity">Quantity:</label> <input type="number"
+						class="form-control" id="quantity">
+				</div>
+
+				<!-- Add Product -->
+				<button type="button" class="btn btn-success mb-3"
+					onclick="addProduct()">Add Product</button>
+
+				<!-- Product Table -->
+				<table class="table table-bordered" id="productTable">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th>Unit Price</th>
+							<th>Quantity</th>
+							<th>Subtotal</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+
+				<!-- Total -->
+				<div class="form-group">
+					<h5>
+						Total: ₹ <span id="total">0.00</span>
+					</h5>
+				</div>
+
+				<!-- Submit -->
+				<button type="submit" class="btn btn-primary">Submit Order</button>
+			</form>
+
 		</div>
-	</div>
 
-	<!-- Bootstrap Bundle with Popper -->
-	<script
-		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-	<!-- Custom JS -->
+		<!-- Bootstrap JS -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-	<script>
- // Wait for the DOM to be fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sidebar toggle functionality
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-        });
-        
-        // Check if we're on mobile
-        function checkMobile() {
-            if (window.innerWidth < 768) {
-                sidebar.classList.add('collapsed');
-            } else {
-                sidebar.classList.remove('collapsed');
-            }
+		<script>
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+    });
+    
+    // Check if we're on mobile
+    function checkMobile() {
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
         }
-        
-        // Initial check
-        checkMobile();
-        
-        // Listen for window resize
-        window.addEventListener('resize', checkMobile);
-        
-        // Initialize Sales Chart
-        const salesChartCtx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(salesChartCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr'],
-                datasets: [
-                    {
-                        label: 'Previous',
-                        data: [65, 75, 85, 90],
-                        backgroundColor: '#FFD700', // Gold color
-                    },
-                    {
-                        label: 'Current',
-                        data: [80, 65, 70, 75],
-                        backgroundColor: '#6366F1', // Indigo color
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            drawBorder: false,
-                            color: 'rgba(200, 200, 200, 0.2)',
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
+    }
+    
+    // Initial check
+    checkMobile();
+    
+    // Listen for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Initialize Sales Chart
+    const salesChartCtx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(salesChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+            datasets: [
+                {
+                    label: 'Previous',
+                    data: [65, 75, 85, 90],
+                    backgroundColor: '#FFD700', // Gold color
+                },
+                {
+                    label: 'Current',
+                    data: [80, 65, 70, 75],
+                    backgroundColor: '#6366F1', // Indigo color
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false,
+                        color: 'rgba(200, 200, 200, 0.2)',
                     }
                 },
-                plugins: {
-                    legend: {
-                        position: 'top',
+                x: {
+                    grid: {
+                        display: false
                     }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
                 }
             }
-        });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        // Select all checkbox functionality
-        const selectAllCheckbox = document.getElementById('selectAll');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('table .form-check-input');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-            });
-        }
-
-        // Individual checkbox change handler
-        const checkboxes = document.querySelectorAll('table .form-check-input:not(#selectAll)');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-                
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
-                }
-            });
-        });
-
-        // Search functionality
-        const searchInput = document.querySelector('.search-wrapper input');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const searchText = searchInput.value.toLowerCase();
-                const rows = document.querySelectorAll('tbody tr');
-                
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    if (text.includes(searchText)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            });
         }
     });
-    </script>
+});
+
+// Set customer input from selected retailer's contact
+function setCustomerFromRetailer() {
+    var retailerSelect = document.getElementById("retailer");
+    var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+    var contactName = selectedOption.getAttribute("data-contact");
+    document.getElementById("customer").value = contactName;
+}
+
+let totalAmount = 0;
+
+function addProduct() {
+    const productDropdown = document.getElementById("product");
+    const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+    const productName = selectedOption.text;
+    const productId = selectedOption.value;
+
+    const priceInput = document.getElementById("price");
+    const quantityInput = document.getElementById("quantity");
+
+    const price = parseFloat(priceInput.value);
+    const quantity = parseInt(quantityInput.value);
+
+    if (!price || !quantity || price <= 0 || quantity <= 0) {
+        alert("Please enter valid price and quantity");
+        return;
+    }
+
+    const subtotal = price * quantity;
+    totalAmount += subtotal;
+
+    // Add row to table
+    const tableBody = document.getElementById("productTable").getElementsByTagName("tbody")[0];
+    const newRow = tableBody.insertRow();
+
+    newRow.insertCell(0).innerText = productName;
+    newRow.insertCell(1).innerText = price.toFixed(2);
+    newRow.insertCell(2).innerText = quantity;
+    newRow.insertCell(3).innerText = subtotal.toFixed(2);
+
+    // Add a remove button
+    const actionCell = newRow.insertCell(4);
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-danger btn-sm";
+    removeBtn.innerText = "Remove";
+
+    // Append hidden inputs to form for submission
+    const form = document.getElementById("orderForm");
+
+    const hiddenProductId = document.createElement("input");
+    hiddenProductId.type = "hidden";
+    hiddenProductId.name = "productId[]";
+    hiddenProductId.value = productId;
+    form.appendChild(hiddenProductId);
+
+    const hiddenUnitPrice = document.createElement("input");
+    hiddenUnitPrice.type = "hidden";
+    hiddenUnitPrice.name = "unitPrice[]";
+    hiddenUnitPrice.value = price.toFixed(2);
+    form.appendChild(hiddenUnitPrice);
+
+    const hiddenQuantity = document.createElement("input");
+    hiddenQuantity.type = "hidden";
+    hiddenQuantity.name = "quantity[]";
+    hiddenQuantity.value = quantity;
+    form.appendChild(hiddenQuantity);
+
+    const hiddenSubtotal = document.createElement("input");
+    hiddenSubtotal.type = "hidden";
+    hiddenSubtotal.name = "subtotal[]";
+    hiddenSubtotal.value = subtotal.toFixed(2);
+    form.appendChild(hiddenSubtotal);
+
+    removeBtn.onclick = function () {
+        totalAmount -= subtotal;
+        document.getElementById("total").innerText = totalAmount.toFixed(2);
+        newRow.remove();
+        // Remove corresponding hidden inputs
+        form.removeChild(hiddenProductId);
+        form.removeChild(hiddenUnitPrice);
+        form.removeChild(hiddenQuantity);
+        form.removeChild(hiddenSubtotal);
+    };
+
+    actionCell.appendChild(removeBtn);
+
+    // Update total amount display
+    document.getElementById("total").innerText = totalAmount.toFixed(2);
+
+    // Clear inputs
+    priceInput.value = "";
+    quantityInput.value = "";
+}
+</script>
+
 </body>
 </html>

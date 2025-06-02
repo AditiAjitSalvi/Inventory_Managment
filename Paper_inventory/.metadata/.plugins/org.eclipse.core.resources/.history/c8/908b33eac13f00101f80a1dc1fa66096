@@ -1,0 +1,87 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+   
+    
+</head>
+<body>
+<%
+    String retailerId = request.getParameter("retailerId");
+    String customerName = request.getParameter("customerName");
+
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] unitPrices = request.getParameterValues("unitPrice[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+    String[] subtotals = request.getParameterValues("subtotal[]");
+
+    Connection con = null;
+    PreparedStatement psOrder = null;
+    PreparedStatement psOrderItem = null;
+    PreparedStatement psUpdateStock = null;
+
+    try {
+        Class.forName("com.mysql.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+
+        // Insert order
+        psOrder = con.prepareStatement("INSERT INTO orders (retailer_id, name, order_date) VALUES (?, ?, NOW())", Statement.RETURN_GENERATED_KEYS);
+        psOrder.setString(1, retailerId);
+        psOrder.setString(2, customerName);
+        psOrder.executeUpdate();
+
+        ResultSet rsOrderId = psOrder.getGeneratedKeys();
+        int orderId = 0;
+        if (rsOrderId.next()) {
+            orderId = rsOrderId.getInt(1);
+        }
+
+        // Prepare statements
+        psOrderItem = con.prepareStatement("INSERT INTO order_items (order_id, product_id, unit_price, quantity, subtotal) VALUES (?, ?, ?, ?, ?)");
+        psUpdateStock = con.prepareStatement("UPDATE products SET stock = stock - ? WHERE product_id = ?");
+
+        for (int i = 0; i < productIds.length; i++) {
+            int productId = Integer.parseInt(productIds[i]);
+            double price = Double.parseDouble(unitPrices[i]);
+            int qty = Integer.parseInt(quantities[i]);
+            double sub = Double.parseDouble(subtotals[i]);
+
+            // Insert order item
+            psOrderItem.setInt(1, orderId);
+            psOrderItem.setInt(2, productId);
+            psOrderItem.setDouble(3, price);
+            psOrderItem.setInt(4, qty);
+            psOrderItem.setDouble(5, sub);
+            psOrderItem.executeUpdate();
+
+            // Update product stock
+            psUpdateStock.setInt(1, qty);
+            psUpdateStock.setInt(2, productId);
+            psUpdateStock.executeUpdate();
+        }
+
+        out.println("<script>alert('Order placed successfully!'); window.location='Order.jsp';</script>");
+
+    } catch (Exception e) {
+        out.println("Error: " + e.getMessage());
+    } finally {
+        if (psOrder != null) psOrder.close();
+        if (psOrderItem != null) psOrderItem.close();
+        if (psUpdateStock != null) psUpdateStock.close();
+        if (con != null) con.close();
+    }
+%>
+</body>
+</html>

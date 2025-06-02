@@ -1,0 +1,542 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders</title>
+<!-- Bootstrap CSS -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<!-- Font Awesome for icons -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<!-- Custom CSS -->
+<style>
+/* Main Layout */
+body {
+	margin: 0;
+	padding: 0;
+	background-color: #f8f9fa;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-container {
+	display: flex;
+	min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+	width: 240px;
+	background-color: #3b82f6; /* Blue 600 equivalent */
+	color: white;
+	transition: all 0.3s ease-in-out;
+	display: flex;
+	flex-direction: column;
+}
+
+.sidebar.collapsed {
+	width: 64px;
+}
+
+.sidebar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px;
+}
+
+.sidebar-title {
+	font-size: 1.25rem;
+	font-weight: bold;
+	margin: 0;
+}
+
+.sidebar-toggle {
+	background: transparent;
+	border: none;
+	color: white;
+	cursor: pointer;
+	padding: 8px;
+}
+
+.sidebar-toggle:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+}
+
+.sidebar-menu {
+	display: flex;
+	flex-direction: column;
+	padding-top: 16px;
+}
+
+.sidebar-link {
+	display: flex;
+	align-items: center;
+	padding: 12px 16px;
+	text-decoration: none;
+	color: white;
+	margin: 4px 0;
+	transition: background-color 0.2s;
+}
+
+.sidebar-link:hover {
+	background-color: #2563eb; /* Blue 700 equivalent */
+	color: white;
+}
+
+.sidebar-link.active {
+	background-color: #1d4ed8; /* Blue 800 equivalent */
+	color: white;
+}
+
+.sidebar-link i {
+	font-size: 1.25rem;
+	width: 20px;
+	text-align: center;
+}
+
+.sidebar-link .link-text {
+	margin-left: 12px;
+	white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-title, .sidebar.collapsed .link-text {
+	display: none;
+}
+
+/* Main Content */
+.main-content {
+	flex: 1;
+	padding: 24px;
+	overflow-y: auto;
+}
+
+/* Stat Cards */
+.stat-card {
+	border-radius: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.125);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+	font-size: 1.25rem;
+	color: #6b7280; /* Text muted equivalent */
+}
+
+.stat-title {
+	font-size: 0.875rem;
+	color: #6b7280; /* Text muted equivalent */
+	margin-bottom: 4px;
+}
+
+.stat-value {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin: 0;
+}
+
+/* Chart Container */
+.chart-container {
+	height: 320px;
+	width: 100%;
+}
+
+/* Product Visualization */
+.product-visualization {
+	height: 256px;
+	background-color: #312e81; /* Indigo 950 equivalent */
+	border-radius: 50%;
+}
+
+/* Status Badges */
+.status {
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	display: inline-block;
+	text-align: center;
+}
+
+.status.pending {
+	background-color: #fff8e6;
+	color: #d97706; /* Amber 500 equivalent */
+}
+
+.status.urgent {
+	background-color: #fef2f2;
+	color: #ef4444; /* Red 500 equivalent */
+}
+
+.status.completed {
+	background-color: #ecfdf5;
+	color: #10b981; /* Green 500 equivalent */
+}
+
+/* Orders Page Styles */
+.orders-container {
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+.search-wrapper {
+	width: 300px;
+}
+
+.order-table {
+	font-size: 0.9rem;
+}
+
+.order-table th {
+	font-weight: 600;
+	color: #4b5563;
+	border-bottom-width: 1px;
+}
+
+.order-table td {
+	vertical-align: middle;
+}
+
+.order-table .form-check {
+	margin: 2;
+}
+
+/* Responsive Adjustments */
+@media ( max-width : 768px) {
+	.sidebar {
+		width: 64px;
+	}
+	.sidebar .sidebar-title, .sidebar .link-text {
+		display: none;
+	}
+	.main-content {
+		padding: 16px;
+	}
+	.orders-container .btn-group {
+		display: flex;
+		flex-direction: column;
+	}
+	.orders-container .btn-group .btn {
+		margin-bottom: 8px;
+		margin-right: 0 !important;
+	}
+	.search-wrapper {
+		width: 100%;
+		margin-bottom: 16px;
+	}
+}
+
+.action-buttons {
+	position: absolute;
+	right: 20px;
+	top: 150px;
+	display: flex;
+	gap: 10px;
+}
+
+@media ( max-width : 992px) {
+	.orders-container .d-flex {
+		flex-direction: column;
+	}
+	.orders-container .d-flex .btn {
+		margin-bottom: 8px;
+	}
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+	transition: 0.3s ease;
+}
+</style>
+</head>
+<body>
+	<div class="dashboard-container">
+		<!-- Sidebar -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-header">
+				<h2 class="sidebar-title">Dashboard</h2>
+				<button class="btn sidebar-toggle" id="sidebarToggle">
+					<i class="fa fa-bars"></i>
+				</button>
+			</div>
+			<div class="sidebar-menu">
+				<div class="profile">
+					<a href="#" class="profile-link"> <img
+						src="https://via.placeholder.com/50" alt="Owner"
+						class="profile-image"> <span class="owner-name">Owner</span>
+					</a>
+				</div>
+				<a href="Home.html" class="sidebar-link active"> <i
+					class="fa fa-home"></i> <span class="link-text">Home</span>
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+					<span class="link-text">Analytics</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i
+					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
+					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
+					href="Order.jsp" class="sidebar-link"> <i
+						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
+				</a>
+
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
+					<span class="link-text">Billing</span>
+				</a> <a href="logout.jsp" class="sidebar-link"> <i
+					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
+				</a>
+
+			</div>
+		</div>
+
+
+		<div class="container">
+			<h2>Place Order</h2>
+			<form action="SaveOrderServlet.java" method="post">
+
+				<!-- Retailer Dropdown -->
+				<div class="form-group mb-3">
+					<label for="retailer">Select Retailer:</label> <select
+						class="form-control" id="retailer" name="retailerId" required
+						onchange="setCustomerFromRetailer()">
+						<option value="" disabled selected>Choose Retailer</option>
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("id")%>"
+							data-contact="<%=rs.getString("contact_name")%>">
+							<%=rs.getString("name")%>
+						</option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading retailers.");
+						}
+						%>
+					</select>
+				</div>
+
+				<!-- Auto-filled Customer Contact Name -->
+				<div class="form-group mb-3">
+					<label for="customer">Customer Contact Name:</label> <input
+						type="text" class="form-control" id="customer" name="customerName"
+						readonly />
+				</div>
+
+				<!-- Product Dropdown -->
+				<div class="form-group mb-3">
+					<label for="product">Select Product:</label> <select
+						class="form-control" id="product">
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("product_id")%>"><%=rs.getString("product_name")%></option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading products.");
+						}
+						%>
+					</select>
+				</div>
+
+				<!-- Price and Quantity Inputs -->
+				<div class="form-group mb-3">
+					<label for="price">Unit Price:</label> <input type="number"
+						class="form-control" id="price" step="0.01">
+				</div>
+
+				<div class="form-group mb-3">
+					<label for="quantity">Quantity:</label> <input type="number"
+						class="form-control" id="quantity">
+				</div>
+
+				<!-- Add Product -->
+				<button type="button" class="btn btn-success mb-3"
+					onclick="addProduct()">Add Product</button>
+
+				<!-- Product Table -->
+				<table class="table table-bordered" id="productTable">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th>Unit Price</th>
+							<th>Quantity</th>
+							<th>Subtotal</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+
+				<!-- Total -->
+				<div class="form-group">
+					<h5>
+						Total: ₹ <span id="total">0.00</span>
+					</h5>
+				</div>
+
+				<!-- Submit -->
+				<button type="submit" class="btn btn-primary">Submit Order</button>
+			</form>
+
+		</div>
+
+		<!-- Bootstrap JS -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+		<script>
+//Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+    });
+    
+    // Check if we're on mobile
+    function checkMobile() {
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+        }
+    }
+    
+    // Initial check
+    checkMobile();
+    
+    // Listen for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Initialize Sales Chart
+    const salesChartCtx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(salesChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+            datasets: [
+                {
+                    label: 'Previous',
+                    data: [65, 75, 85, 90],
+                    backgroundColor: '#FFD700', // Gold color
+                },
+                {
+                    label: 'Current',
+                    data: [80, 65, 70, 75],
+                    backgroundColor: '#6366F1', // Indigo color
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false,
+                        color: 'rgba(200, 200, 200, 0.2)',
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+});
+    function setCustomerFromRetailer() {
+        var retailerSelect = document.getElementById("retailer");
+        var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+        var contactName = selectedOption.getAttribute("data-contact");
+        document.getElementById("customer").value = contactName;
+    }
+ // Hidden inputs for backend processing
+    const form = document.querySelector("form");
+
+    form.insertAdjacentHTML('beforeend', `
+      <input type="hidden" name="productId[]" value="${productId}" />
+      <input type="hidden" name="unitPrice[]" value="${price.toFixed(2)}" />
+      <input type="hidden" name="quantity[]" value="${quantity}" />
+      <input type="hidden" name="subtotal[]" value="${subtotal.toFixed(2)}" />
+    `);
+
+   
+	let totalAmount = 0;
+
+	function addProduct() {
+		const productDropdown = document.getElementById("product");
+		const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+		const productName = selectedOption.text;
+		const productId = selectedOption.value;
+
+		const priceInput = document.getElementById("price");
+		const quantityInput = document.getElementById("quantity");
+
+		const price = parseFloat(priceInput.value);
+		const quantity = parseInt(quantityInput.value);
+
+		if (!price || !quantity || price <= 0 || quantity <= 0) {
+			alert("Please enter valid price and quantity");
+			return;
+		}
+
+		const subtotal = price * quantity;
+		totalAmount += subtotal;
+
+		// Add row to table
+		const tableBody = document.getElementById("productTable").getElementsByTagName("tbody")[0];
+		const newRow = tableBody.insertRow();
+
+		const productCell = newRow.insertCell(0);
+		const priceCell = newRow.insertCell(1);
+		const quantityCell = newRow.insertCell(2);
+		const subtotalCell = newRow.insertCell(3);
+
+		productCell.innerText = productName;
+		priceCell.innerText = price.toFixed(2);
+		quantityCell.innerText = quantity;
+		subtotalCell.innerText = subtotal.toFixed(2);
+
+		// Update total amount
+		document.getElementById("total").innerText = totalAmount.toFixed(2);
+
+		// Optional: clear fields
+		priceInput.value = "";
+		quantityInput.value = "";
+	}
+</script>
+</body>
+</html>

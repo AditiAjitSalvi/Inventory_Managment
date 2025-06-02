@@ -1,0 +1,129 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+</head>
+<body>
+<%!
+    // Utility function to generate unique IDs with prefix + datetime + random digits
+    String generateUniqueId(String prefix) {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMddHHmmssSSS");
+        String dateTime = sdf.format(new java.util.Date());
+        int random = (int)(Math.random() * 900) + 100; // 3 digit random number
+        return prefix + dateTime + random;
+    }
+%>
+
+<%
+    String retailerId = request.getParameter("retailerId");
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] unitPrices = request.getParameterValues("unitPrice[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+    String[] subtotals = request.getParameterValues("subtotal[]");
+
+    Connection con = null;
+    PreparedStatement psOrder = null;
+    PreparedStatement psOrderItem = null;
+    PreparedStatement psUpdateStock = null;
+    PreparedStatement psUpdateTotal = null;
+    PreparedStatement psInsertBilling = null;
+    PreparedStatement psUpdateBillingId = null;
+
+    double totalAmount = 0.0;
+
+    try {
+        Class.forName("com.mysql.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+        con.setAutoCommit(false); // Start transaction
+
+        // Generate unique IDs
+        String orderId = generateUniqueId("ORD");
+        String billingId = generateUniqueId("BILL");
+
+        // Step 1: Insert into orders table with generated orderId
+        String insertOrder = "INSERT INTO orders (id, retailer_id, order_date, status, total_amount) VALUES (?, ?, NOW(), 'Pending', 0)";
+        psOrder = con.prepareStatement(insertOrder);
+        psOrder.setString(1, orderId);
+        psOrder.setString(2, retailerId);
+        psOrder.executeUpdate();
+
+        // Step 2: Insert into order_items with generated order_item_id
+        String insertItem = "INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?)";
+        psOrderItem = con.prepareStatement(insertItem);
+        psUpdateStock = con.prepareStatement("UPDATE products SET stock = stock - ? WHERE product_id = ?");
+
+        for (int i = 0; i < productIds.length; i++) {
+            String orderItemId = generateUniqueId("ITEM");
+
+            int pid = Integer.parseInt(productIds[i]);
+            int qty = Integer.parseInt(quantities[i]);
+            double price = Double.parseDouble(unitPrices[i]);
+            double subtotal = Double.parseDouble(subtotals[i]);
+            totalAmount += subtotal;
+
+            psOrderItem.setString(1, orderItemId);
+            psOrderItem.setString(2, orderId);
+            psOrderItem.setInt(3, pid);
+            psOrderItem.setInt(4, qty);
+            psOrderItem.setDouble(5, price);
+            psOrderItem.setDouble(6, subtotal);
+            psOrderItem.executeUpdate();
+
+            psUpdateStock.setInt(1, qty);
+            psUpdateStock.setInt(2, pid);
+            psUpdateStock.executeUpdate();
+        }
+
+        // Step 3: Update total_amount in orders
+        String updateTotal = "UPDATE orders SET total_amount = ? WHERE order_id = ?";
+        psUpdateTotal = con.prepareStatement(updateTotal);
+        psUpdateTotal.setDouble(1, totalAmount);
+        psUpdateTotal.setString(2, orderId);
+        psUpdateTotal.executeUpdate();
+
+        // Step 4: Insert into billing table with generated billingId
+        String insertBilling = "INSERT INTO billing (billing_id, order_id, billing_date, total_amount) VALUES (?, ?, NOW(), ?)";
+        psInsertBilling = con.prepareStatement(insertBilling);
+        psInsertBilling.setString(1, billingId);
+        psInsertBilling.setString(2, orderId);
+        psInsertBilling.setDouble(3, totalAmount);
+        psInsertBilling.executeUpdate();
+
+        // Step 5: Update orders with billing_id
+        String updateOrderBilling = "UPDATE orders SET billing_id = ? WHERE order_id = ?";
+        psUpdateBillingId = con.prepareStatement(updateOrderBilling);
+        psUpdateBillingId.setString(1, billingId);
+        psUpdateBillingId.setString(2, orderId);
+        psUpdateBillingId.executeUpdate();
+
+        con.commit(); // All successful
+
+        out.println("<script>alert('Order placed and billing generated successfully!'); window.location='Order.jsp';</script>");
+
+    } catch (Exception e) {
+        if (con != null) con.rollback(); // Rollback on error
+        out.println("Error: " + e.getMessage());
+    } finally {
+        if (psOrder != null) psOrder.close();
+        if (psOrderItem != null) psOrderItem.close();
+        if (psUpdateStock != null) psUpdateStock.close();
+        if (psUpdateTotal != null) psUpdateTotal.close();
+        if (psInsertBilling != null) psInsertBilling.close();
+        if (psUpdateBillingId != null) psUpdateBillingId.close();
+        if (con != null) con.close();
+    }
+%>
+
+</body>
+</html>
