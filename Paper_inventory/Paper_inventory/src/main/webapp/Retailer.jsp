@@ -1,12 +1,17 @@
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+	pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retailer
-</title>
+<title>Retailer</title>
 <!-- Bootstrap CSS -->
 <link
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -260,24 +265,16 @@ body {
 						class="profile-image"> <span class="owner-name">Owner</span>
 					</a>
 				</div>
-				<a href="Home.html" class="sidebar-link active"> 
-				<i class="fa fa-home"></i>
-					<span class="link-text">Home</span>
-				</a>
-				 <a href="#" class="sidebar-link">
-				  <i class="fa fa-chart-bar"></i>
+				<a href="Home.html" class="sidebar-link active"> <i
+					class="fa fa-home"></i> <span class="link-text">Home</span>
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
 					<span class="link-text">Analytics</span>
-				</a> 
-				<a href="Product.html" class="sidebar-link"> 
-				<i class="fa fa-shopping-bag"></i>
-				 <span class="link-text">Products</span>
-				</a> 
-				<a href="Retailer.html" class="sidebar-link"> 
-				<i class="fa fa-users"></i>
-				 <span class="link-text">Retailer</span>
-					 <a href="Order.html"class="sidebar-link">
-					  <i class="fa fa-shopping-cart"></i>
-					   <span class="link-text">Orders</span>
+				</a> <a href="Product.html" class="sidebar-link"> <i
+					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
+				</a> <a href="Retailer.html" class="sidebar-link"> <i
+					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
+					href="Order.html" class="sidebar-link"> <i
+						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
 				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
@@ -294,10 +291,7 @@ body {
 			<div class="customers-container">
 				<div class="d-flex justify-content-between align-items-center mb-4">
 					<h2 class="m-0">Retailer</h2>
-					<div class="btn-group">
-						
-						
-					</div>
+					<div class="btn-group"></div>
 				</div>
 
 				<div class="d-flex justify-content-between align-items-center mb-4">
@@ -310,22 +304,15 @@ body {
 						</div>
 					</div>
 					<div class="d-flex">
-						<button class="btn btn-primary">+ Add Retailer</button>
-						
+						<button class="btn btn-primary" data-bs-toggle="modal"
+							data-bs-target="#addRetailerModal">+ Add Retailer</button>
+
 						<button class="btn btn-outline-secondary">
 							<i class="fa fa-filter me-1"></i> <span>Filter</span>
 						</button>
 					</div>
 				</div>
-				<div class="d-flex"
-					style="right: 50px; top: 150px; display: flex; gap: 10px;margin-left:980px;">
-					<button class="btn btn-outline-primary me-2">
-						<i class="fa fa-edit me-1"></i> <span>Update</span>
-					</button>
-					<button class="btn btn-outline-danger">
-						<i class="fa fa-trash me-1"></i> <span>Delete</span>
-					</button>
-				</div>
+				
 
 
 				<div class="card">
@@ -336,110 +323,109 @@ body {
 									<tr>
 										<th>
 											<div class="form-check">
+												<!-- This checkbox is usually for Select All -->
 												<input class="form-check-input" type="checkbox"
 													id="selectAll"> <label class="form-check-label"
 													for="selectAll"></label>
 											</div>
 										</th>
-										<th>Customer ID</th>
+
+										<th>id</th>
 										<th>Name</th>
-										<th>Email</th>
-										<th>Phone</th>
-                                        <th>Debit Amount</th>
+										<th>contact_name</th>
+										<th>email</th>
+										<th>phone</th>
+										<th>address</th>
+
 									</tr>
 								</thead>
 								<tbody>
+									<%
+									Connection conn = null;
+									Statement stmt = null;
+									ResultSet rs = null;
+									String sql = "SELECT * FROM retailers";
+									String driverNm = "com.mysql.cj.jdbc.Driver";
+									String url = "jdbc:mysql://localhost:3307/inventory";
+
+									try {
+										Class.forName(driverNm);
+										conn = DriverManager.getConnection(url, "root", "");
+										stmt = conn.createStatement();
+										rs = stmt.executeQuery(sql);
+
+										while (rs.next()) {
+											String id = rs.getString("id");
+									%>
 									<tr>
 										<td>
 											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
+												<input class="form-check-input" type="checkbox"
+													id="selectAll"> <label class="form-check-label"
+													for="selectAll"></label>
 											</div>
 										</td>
-										<td>#C001</td>
-										<td>John Smith</td>
-										<td>john.smith@example.com</td>
-										<td>+1 (555) 123-4567</td>
-                                        <td>$245.00</td>
-									</tr>
-									<tr>
+
+										<td><%=rs.getString("id")%></td>
+										<td><%=rs.getString("name")%></td>
+										<td><%=rs.getString("contact_name")%></td>
+										<td><%=rs.getString("email")%></td>
+										<td><%=rs.getString("phone")%></td>
+										<td><%=rs.getString("address")%></td>
 										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
+											<form action="DeleteRetailer.jsp" method="post"
+												onsubmit="return confirm('Are you sure you want to delete selected retailers?');">
+
+												<button type="submit" name="selectedIds" value="<%=id%>"
+													class="btn btn-sm btn-danger"
+													onclick="return confirm('Delete retailer with id <%=id%>?')">
+													Delete</button>
+											</form>
 										</td>
-										<td>#C002</td>
-										<td>Emily Johnson</td>
-										<td>emily.johnson@example.com</td>
-										<td>+1 (555) 234-5678</td>
-                                        <td>$128.50</td>
-									</tr>
-									<tr>
 										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
+											<form action="UpdateRetailer.jsp" method="get">
+												<%
+												String name = rs.getString("name");
+												String contactName = rs.getString("contact_name");
+												String email = rs.getString("email");
+												String phone = rs.getString("phone");
+												String address = rs.getString("address");
+												String createdAt = rs.getString("created_at");
+												%>
+												<button type="button"
+													class="btn btn-sm btn-primary btn-update" data-id="<%=id%>"
+													data-name="<%=name%>" data-contact_name="<%=contactName%>"
+													data-email="<%=email%>" data-phone="<%=phone%>"
+													data-address="<%=address%>"
+													data-created_at="<%=createdAt != null ? createdAt.replace(' ', 'T') : ""%>">
+													Update</button>
+
+
+											</form>
 										</td>
-										<td>#C003</td>
-										<td>Michael Brown</td>
-										<td>michael.brown@example.com</td>
-										<td>+1 (555) 345-6789</td>
-                                        <td>$0.00</td>
 									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#C004</td>
-										<td>Sarah Davis</td>
-										<td>sarah.davis@example.com</td>
-										<td>+1 (555) 456-7890</td>
-                                        <td>$387.25</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#C005</td>
-										<td>David Wilson</td>
-										<td>david.wilson@example.com</td>
-										<td>+1 (555) 567-8901</td>
-                                        <td>$0.00</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#C006</td>
-										<td>Jessica Taylor</td>
-										<td>jessica.taylor@example.com</td>
-										<td>+1 (555) 678-9012</td>
-                                        <td>$92.75</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="form-check">
-												<input class="form-check-input" type="checkbox"> <label
-													class="form-check-label"></label>
-											</div>
-										</td>
-										<td>#C007</td>
-										<td>Robert Martinez</td>
-										<td>robert.martinez@example.com</td>
-										<td>+1 (555) 789-0123</td>
-                                        <td>$175.50</td>
-									</tr>
+									<%
+									}
+									} catch (Exception e) {
+									out.println("Error: " + e.getMessage());
+									} finally {
+									try {
+									if (rs != null)
+										rs.close();
+									} catch (Exception e) {
+									}
+									try {
+									if (stmt != null)
+										stmt.close();
+									} catch (Exception e) {
+									}
+									try {
+									if (conn != null)
+										conn.close();
+									} catch (Exception e) {
+									}
+									}
+									%>
 								</tbody>
 							</table>
 						</div>
@@ -452,7 +438,158 @@ body {
 	<!-- Bootstrap Bundle with Popper -->
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-	<!-- Custom JS -->
+	<button class="btn btn-primary" data-bs-toggle="modal"
+		data-bs-target="#addRetailerModal">+ Add Retailer</button>
+
+	<!-- Add Retailer Modal -->
+	<div class="modal fade" id="addRetailerModal" tabindex="-1"
+		aria-labelledby="addRetailerModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form action="AddRetailer.jsp" method="post">
+					<div class="modal-header"></div>
+
+					<div class="modal-body">
+						<div class="mb-3">
+							<label for="id" class="form-label">Retailer ID</label> <input
+								type="number" class="form-control" id="id" name="id" required>
+						</div>
+						<div class="mb-3">
+							<label for="name" class="form-label">Retailer Name</label> <input
+								type="text" class="form-control" id="name" name="name" required>
+						</div>
+						<div class="mb-3">
+							<label for="contact_name" class="form-label">Contact Name</label>
+							<input type="text" class="form-control" id="contact_name"
+								name="contact_name" required>
+						</div>
+						<div class="mb-3">
+							<label for="email" class="form-label">Email</label> <input
+								type="email" class="form-control" id="email" name="email"
+								required>
+						</div>
+						<div class="mb-3">
+							<label for="phone" class="form-label">Phone</label> <input
+								type="text" class="form-control" id="phone" name="phone"
+								required>
+						</div>
+						<div class="mb-3">
+							<label for="address" class="form-label">Address</label> <input
+								type="text" class="form-control" id="address" name="address"
+								required>
+						</div>
+						<div class="mb-3">
+							<label for="created_at" class="form-label">Created At</label> <input
+								type="datetime-local" class="form-control" id="created_at"
+								name="created_at" required>
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-success">Add
+							Retailer</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- Update Retailer Modal -->
+	<div class="modal fade" id="updateRetailerModal" tabindex="-1"
+		aria-labelledby="updateRetailerModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form action="UpdateRetailer.jsp" method="post"
+					id="updateRetailerForm">
+					<div class="modal-header">
+						<h5 class="modal-title" id="updateRetailerModalLabel">Update
+							Retailer</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<input type="hidden" id="update_id" name="id" />
+						<div class="mb-3">
+							<label for="update_name" class="form-label">Retailer Name</label>
+							<input type="text" class="form-control" id="update_name"
+								name="name" required>
+						</div>
+						<div class="mb-3">
+							<label for="update_contact_name" class="form-label">Contact
+								Name</label> <input type="text" class="form-control"
+								id="update_contact_name" name="contact_name" required>
+						</div>
+						<div class="mb-3">
+							<label for="update_email" class="form-label">Email</label> <input
+								type="email" class="form-control" id="update_email" name="email"
+								required>
+						</div>
+						<div class="mb-3">
+							<label for="update_phone" class="form-label">Phone</label> <input
+								type="text" class="form-control" id="update_phone" name="phone"
+								required>
+						</div>
+						<div class="mb-3">
+							<label for="update_address" class="form-label">Address</label> <input
+								type="text" class="form-control" id="update_address"
+								name="address" required>
+						</div>
+						<div class="mb-3">
+							<label for="update_created_at" class="form-label">Created
+								At</label> <input type="datetime-local" class="form-control"
+								id="update_created_at" name="created_at" required>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Update
+							Retailer</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<%
+	if ("update_success".equals(request.getParameter("status"))) {
+	%>
+	<script>
+    const updateToast = new bootstrap.Toast(document.getElementById('successToast'));
+    updateToast.show();
+</script>
+	<%
+	}
+	%>
+
+	<!-- Success Toast -->
+	<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+		<div id="successToast"
+			class="toast align-items-center text-white bg-success border-0"
+			role="alert">
+			<div class="d-flex">
+				<div class="toast-body">✅ Retailer added successfully!</div>
+				<button type="button" class="btn-close btn-close-white me-2 m-auto"
+					data-bs-dismiss="toast"></button>
+			</div>
+		</div>
+	</div>
+	<%
+	if ("success".equals(request.getParameter("status"))) {
+	%>
+	<script>
+        const toast = new bootstrap.Toast(document.getElementById('successToast'));
+        toast.show();
+    </script>
+	<%
+	}
+	%>
+
+
+	<!-- Bootstrap CSS -->
+	<link
+		href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+		rel="stylesheet">
+
+	<!-- Bootstrap Bundle JS (includes Popper) -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 	<script>
  // Wait for the DOM to be fully loaded
@@ -522,6 +659,48 @@ body {
                 });
             });
         }
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+          const toast = new bootstrap.Toast(document.getElementById('successToast'));
+          toast.show();
+
+          // Remove the query string after showing toast
+          history.replaceState({}, document.title, window.location.pathname);
+        }
+      });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach click event for all update buttons
+        document.querySelectorAll('.btn-update').forEach(button => {
+            button.addEventListener('click', function() {
+                // Get data attributes from clicked button
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const contact_name = this.getAttribute('data-contact_name');
+                const email = this.getAttribute('data-email');
+                const phone = this.getAttribute('data-phone');
+                const address = this.getAttribute('data-address');
+                const created_at_raw = this.getAttribute('data-created_at');
+                
+                // Format created_at to datetime-local format yyyy-MM-ddTHH:mm
+                const created_at = new Date(created_at_raw);
+                const formattedCreatedAt = created_at.toISOString().slice(0,16);
+
+                // Fill the form fields
+                document.getElementById('update_id').value = id;
+                document.getElementById('update_name').value = name;
+                document.getElementById('update_contact_name').value = contact_name;
+                document.getElementById('update_email').value = email;
+                document.getElementById('update_phone').value = phone;
+                document.getElementById('update_address').value = address;
+                document.getElementById('update_created_at').value = formattedCreatedAt;
+
+                // Show the modal
+                const updateModal = new bootstrap.Modal(document.getElementById('updateRetailerModal'));
+                updateModal.show();
+            });
+        });
     });
     </script>
 </body>

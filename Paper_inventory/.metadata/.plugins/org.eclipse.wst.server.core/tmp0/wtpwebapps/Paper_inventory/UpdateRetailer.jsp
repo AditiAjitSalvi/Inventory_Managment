@@ -1,0 +1,65 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<%@page import="java.sql.*"%>
+	<%
+    String id = request.getParameter("id");
+    String name = request.getParameter("name");
+    String contact_name = request.getParameter("contact_name");
+    String email = request.getParameter("email");
+    String phone = request.getParameter("phone");
+    String address = request.getParameter("address");
+    String created_at = request.getParameter("created_at"); // in format yyyy-MM-ddTHH:mm
+
+    String url = "jdbc:mysql://localhost:3307/inventory";
+    String driverNm = "com.mysql.cj.jdbc.Driver";
+
+    Connection conn = null;
+    PreparedStatement ps = null;
+
+    try {
+        Class.forName(driverNm);
+        conn = DriverManager.getConnection(url, "root", "");
+
+        // Convert created_at to Timestamp
+        // Replace 'T' with space for MySQL DATETIME compatibility
+        String createdAtFormatted = created_at.replace('T', ' ') + ":00";
+
+        String sql = "UPDATE retailers SET name=?, contact_name=?, email=?, phone=?, address=?, created_at=? WHERE id=?";
+        ps = conn.prepareStatement(sql);
+        ps.setString(1, name);
+        ps.setString(2, contact_name);
+        ps.setString(3, email);
+        ps.setString(4, phone);
+        ps.setString(5, address);
+        ps.setString(6, createdAtFormatted);
+        ps.setString(7, id);
+
+        int rowsUpdated = ps.executeUpdate();
+        if(rowsUpdated > 0) {
+            response.sendRedirect("Retailer.jsp?status=update_success");
+        } else {
+            out.println("No retailer found with id " + id);
+        }
+    } catch(Exception e) {
+        out.println("Error: " + e.getMessage());
+    } finally {
+        if(ps != null) try { ps.close(); } catch(Exception e) {}
+        if(conn != null) try { conn.close(); } catch(Exception e) {}
+    }
+%>
+
+</body>
+</html>

@@ -1,2 +1,3 @@
-2025/06/02-09:42:06.555 9e30 Creating DB C:\Users\aditi\OneDrive\Desktop\Paper_inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Sync Data\LevelDB since it was missing.
-2025/06/02-09:42:06.571 9e30 Reusing MANIFEST C:\Users\aditi\OneDrive\Desktop\Paper_inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Sync Data\LevelDB/MANIFEST-000001
+2025/06/02-12:48:27.595 5c78 Reusing MANIFEST C:\Users\aditi\OneDrive\Desktop\Paper_inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Sync Data\LevelDB/MANIFEST-000001
+2025/06/02-12:48:27.600 5c78 Recovering log #3
+2025/06/02-12:48:27.601 5c78 Reusing old log C:\Users\aditi\OneDrive\Desktop\Paper_inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Sync Data\LevelDB/000003.log 
