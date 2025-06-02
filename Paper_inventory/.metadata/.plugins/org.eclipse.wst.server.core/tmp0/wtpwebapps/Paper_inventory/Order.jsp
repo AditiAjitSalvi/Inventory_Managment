@@ -302,7 +302,7 @@ body {
 
 		<div class="container">
 			<h2>Place Order</h2>
-			<form action="SaveOrder.jsp" method="post" id="orderForm" >
+			<form action="SaveOrder.jsp" method="post" id="orderForm">
 
 
 				<!-- Retailer Dropdown -->
@@ -401,178 +401,269 @@ body {
 				<!-- Submit -->
 				<button type="submit" class="btn btn-primary">Submit Order</button>
 			</form>
+			<div class="card">
+				<div class="card-body p-0">
+					<div class="table-responsive">
+						<table class="table customer-table mb-0">
+							<thead>
+								<tr>
+									<th>
+										<div class="form-check">
+											<input class="form-check-input" type="checkbox"
+												id="selectAll"> <label class="form-check-label"
+												for="selectAll"></label>
+										</div>
+									</th>
+									<th>id</th>
+									<th>reatiler_id</th>
+									<th>order_date</th>
+									<th>total_amount</th>
+									<th>Quntity of order</th>
 
+								</tr>
+							</thead>
+							<tbody>
+								<%
+								Connection conn = null;
+								Statement stmt = null;
+								ResultSet rs = null;
+
+								String driverNm = "com.mysql.cj.jdbc.Driver";
+								String url = "jdbc:mysql://localhost:3307/inventory";
+
+								try {
+									Class.forName(driverNm);
+									conn = DriverManager.getConnection(url, "root", "");
+									stmt = conn.createStatement();
+									rs = stmt.executeQuery("SELECT o.*, IFNULL(q.total_quantity, 0) AS total_quantity " + "FROM orders o "
+									+ "LEFT JOIN (" + "  SELECT order_id, SUM(quantity) AS total_quantity " + "  FROM order_items "
+									+ "  GROUP BY order_id" + ") q ON o.id = q.order_id");
+
+									while (rs.next()) {
+								%>
+
+
+								<tr>
+									<td>
+										<div class="form-check">
+											<input class="form-check-input" type="checkbox">
+										</div>
+									</td>
+									<td><%=rs.getString("id")%></td>
+									<td><%=rs.getString("retailer_id")%></td>
+									<td><%=rs.getString("order_date")%></td>
+									<td><%=rs.getInt("total_amount")%></td>
+									<td><%=rs.getInt("total_quantity")%></td>
+									<td>
+										<form action="deleteOrder.jsp" method="post"
+											onsubmit="return confirm('Are you sure you want to delete this order?');">
+											<input type="hidden" name="orderId"
+												value="<%=rs.getString("id")%>">
+											<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+										</form>
+									</td>
+
+								</tr>
+								<%
+								}
+								} catch (Exception e) {
+								out.println("Error: " + e.getMessage());
+								} finally {
+								try {
+								if (rs != null)
+									rs.close();
+								} catch (Exception e) {
+								}
+								try {
+								if (stmt != null)
+									stmt.close();
+								} catch (Exception e) {
+								}
+								try {
+								if (conn != null)
+									conn.close();
+								} catch (Exception e) {
+								}
+								}
+								%>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
 		</div>
+
 
 		<!-- Bootstrap JS -->
 		<script
 			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 		<script>
-// Wait for the DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Sidebar toggle functionality
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    
-    sidebarToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-    });
-    
-    // Check if we're on mobile
-    function checkMobile() {
-        if (window.innerWidth < 768) {
-            sidebar.classList.add('collapsed');
-        } else {
-            sidebar.classList.remove('collapsed');
-        }
-    }
-    
-    // Initial check
-    checkMobile();
-    
-    // Listen for window resize
-    window.addEventListener('resize', checkMobile);
-    
-    // Initialize Sales Chart
-    const salesChartCtx = document.getElementById('salesChart').getContext('2d');
-    const salesChart = new Chart(salesChartCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr'],
-            datasets: [
-                {
-                    label: 'Previous',
-                    data: [65, 75, 85, 90],
-                    backgroundColor: '#FFD700', // Gold color
-                },
-                {
-                    label: 'Current',
-                    data: [80, 65, 70, 75],
-                    backgroundColor: '#6366F1', // Indigo color
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false,
-                        color: 'rgba(200, 200, 200, 0.2)',
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
-        }
-    });
-});
+			// Wait for the DOM to be fully loaded
+			document.addEventListener('DOMContentLoaded', function() {
+				// Sidebar toggle functionality
+				const sidebarToggle = document.getElementById('sidebarToggle');
+				const sidebar = document.getElementById('sidebar');
 
-// Set customer input from selected retailer's contact
-function setCustomerFromRetailer() {
-    var retailerSelect = document.getElementById("retailer");
-    var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
-    var contactName = selectedOption.getAttribute("data-contact");
-    document.getElementById("customer").value = contactName;
-}
+				sidebarToggle.addEventListener('click', function() {
+					sidebar.classList.toggle('collapsed');
+				});
 
-let totalAmount = 0;
+				// Check if we're on mobile
+				function checkMobile() {
+					if (window.innerWidth < 768) {
+						sidebar.classList.add('collapsed');
+					} else {
+						sidebar.classList.remove('collapsed');
+					}
+				}
 
-function addProduct() {
-    const productDropdown = document.getElementById("product");
-    const selectedOption = productDropdown.options[productDropdown.selectedIndex];
-    const productName = selectedOption.text;
-    const productId = selectedOption.value;
+				// Initial check
+				checkMobile();
 
-    const priceInput = document.getElementById("price");
-    const quantityInput = document.getElementById("quantity");
+				// Listen for window resize
+				window.addEventListener('resize', checkMobile);
 
-    const price = parseFloat(priceInput.value);
-    const quantity = parseInt(quantityInput.value);
+				// Initialize Sales Chart
+				const salesChartCtx = document.getElementById('salesChart')
+						.getContext('2d');
+				const salesChart = new Chart(salesChartCtx, {
+					type : 'bar',
+					data : {
+						labels : [ 'Jan', 'Feb', 'Mar', 'Apr' ],
+						datasets : [ {
+							label : 'Previous',
+							data : [ 65, 75, 85, 90 ],
+							backgroundColor : '#FFD700', // Gold color
+						}, {
+							label : 'Current',
+							data : [ 80, 65, 70, 75 ],
+							backgroundColor : '#6366F1', // Indigo color
+						} ]
+					},
+					options : {
+						responsive : true,
+						maintainAspectRatio : false,
+						scales : {
+							y : {
+								beginAtZero : true,
+								grid : {
+									drawBorder : false,
+									color : 'rgba(200, 200, 200, 0.2)',
+								}
+							},
+							x : {
+								grid : {
+									display : false
+								}
+							}
+						},
+						plugins : {
+							legend : {
+								position : 'top',
+							}
+						}
+					}
+				});
+			});
 
-    if (!price || !quantity || price <= 0 || quantity <= 0) {
-        alert("Please enter valid price and quantity");
-        return;
-    }
+			// Set customer input from selected retailer's contact
+			function setCustomerFromRetailer() {
+				var retailerSelect = document.getElementById("retailer");
+				var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+				var contactName = selectedOption.getAttribute("data-contact");
+				document.getElementById("customer").value = contactName;
+			}
 
-    const subtotal = price * quantity;
-    totalAmount += subtotal;
+			let totalAmount = 0;
 
-    // Add row to table
-    const tableBody = document.getElementById("productTable").getElementsByTagName("tbody")[0];
-    const newRow = tableBody.insertRow();
+			function addProduct() {
+				const productDropdown = document.getElementById("product");
+				const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+				const productName = selectedOption.text;
+				const productId = selectedOption.value;
 
-    newRow.insertCell(0).innerText = productName;
-    newRow.insertCell(1).innerText = price.toFixed(2);
-    newRow.insertCell(2).innerText = quantity;
-    newRow.insertCell(3).innerText = subtotal.toFixed(2);
+				const priceInput = document.getElementById("price");
+				const quantityInput = document.getElementById("quantity");
 
-    // Add a remove button
-    const actionCell = newRow.insertCell(4);
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "btn btn-danger btn-sm";
-    removeBtn.innerText = "Remove";
+				const price = parseFloat(priceInput.value);
+				const quantity = parseInt(quantityInput.value);
 
-    // Append hidden inputs to form for submission
-    const form = document.getElementById("orderForm");
+				if (!price || !quantity || price <= 0 || quantity <= 0) {
+					alert("Please enter valid price and quantity");
+					return;
+				}
 
-    const hiddenProductId = document.createElement("input");
-    hiddenProductId.type = "hidden";
-    hiddenProductId.name = "productId[]";
-    hiddenProductId.value = productId;
-    form.appendChild(hiddenProductId);
+				const subtotal = price * quantity;
+				totalAmount += subtotal;
 
-    const hiddenUnitPrice = document.createElement("input");
-    hiddenUnitPrice.type = "hidden";
-    hiddenUnitPrice.name = "unitPrice[]";
-    hiddenUnitPrice.value = price.toFixed(2);
-    form.appendChild(hiddenUnitPrice);
+				// Add row to table
+				const tableBody = document.getElementById("productTable")
+						.getElementsByTagName("tbody")[0];
+				const newRow = tableBody.insertRow();
 
-    const hiddenQuantity = document.createElement("input");
-    hiddenQuantity.type = "hidden";
-    hiddenQuantity.name = "quantity[]";
-    hiddenQuantity.value = quantity;
-    form.appendChild(hiddenQuantity);
+				newRow.insertCell(0).innerText = productName;
+				newRow.insertCell(1).innerText = price.toFixed(2);
+				newRow.insertCell(2).innerText = quantity;
+				newRow.insertCell(3).innerText = subtotal.toFixed(2);
 
-    const hiddenSubtotal = document.createElement("input");
-    hiddenSubtotal.type = "hidden";
-    hiddenSubtotal.name = "subtotal[]";
-    hiddenSubtotal.value = subtotal.toFixed(2);
-    form.appendChild(hiddenSubtotal);
+				// Add a remove button
+				const actionCell = newRow.insertCell(4);
+				const removeBtn = document.createElement("button");
+				removeBtn.type = "button";
+				removeBtn.className = "btn btn-danger btn-sm";
+				removeBtn.innerText = "Remove";
 
-    removeBtn.onclick = function () {
-        totalAmount -= subtotal;
-        document.getElementById("total").innerText = totalAmount.toFixed(2);
-        newRow.remove();
-        // Remove corresponding hidden inputs
-        form.removeChild(hiddenProductId);
-        form.removeChild(hiddenUnitPrice);
-        form.removeChild(hiddenQuantity);
-        form.removeChild(hiddenSubtotal);
-    };
+				// Append hidden inputs to form for submission
+				const form = document.getElementById("orderForm");
 
-    actionCell.appendChild(removeBtn);
+				const hiddenProductId = document.createElement("input");
+				hiddenProductId.type = "hidden";
+				hiddenProductId.name = "productId[]";
+				hiddenProductId.value = productId;
+				form.appendChild(hiddenProductId);
 
-    // Update total amount display
-    document.getElementById("total").innerText = totalAmount.toFixed(2);
+				const hiddenUnitPrice = document.createElement("input");
+				hiddenUnitPrice.type = "hidden";
+				hiddenUnitPrice.name = "unitPrice[]";
+				hiddenUnitPrice.value = price.toFixed(2);
+				form.appendChild(hiddenUnitPrice);
 
-    // Clear inputs
-    priceInput.value = "";
-    quantityInput.value = "";
-}
-</script>
+				const hiddenQuantity = document.createElement("input");
+				hiddenQuantity.type = "hidden";
+				hiddenQuantity.name = "quantity[]";
+				hiddenQuantity.value = quantity;
+				form.appendChild(hiddenQuantity);
 
+				const hiddenSubtotal = document.createElement("input");
+				hiddenSubtotal.type = "hidden";
+				hiddenSubtotal.name = "subtotal[]";
+				hiddenSubtotal.value = subtotal.toFixed(2);
+				form.appendChild(hiddenSubtotal);
+
+				removeBtn.onclick = function() {
+					totalAmount -= subtotal;
+					document.getElementById("total").innerText = totalAmount
+							.toFixed(2);
+					newRow.remove();
+					// Remove corresponding hidden inputs
+					form.removeChild(hiddenProductId);
+					form.removeChild(hiddenUnitPrice);
+					form.removeChild(hiddenQuantity);
+					form.removeChild(hiddenSubtotal);
+				};
+
+				actionCell.appendChild(removeBtn);
+
+				// Update total amount display
+				document.getElementById("total").innerText = totalAmount
+						.toFixed(2);
+
+				// Clear inputs
+				priceInput.value = "";
+				quantityInput.value = "";
+			}
+		</script>
 </body>
 </html>
