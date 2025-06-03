@@ -1,0 +1,673 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders</title>
+<!-- Bootstrap CSS -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<!-- Font Awesome for icons -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<!-- Custom CSS -->
+<style>
+/* Main Layout */
+body {
+	margin: 0;
+	padding: 0;
+	background-color: #f8f9fa;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-container {
+	display: flex;
+	min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+	width: 240px;
+	background-color: #3b82f6; /* Blue 600 equivalent */
+	color: white;
+	transition: all 0.3s ease-in-out;
+	display: flex;
+	flex-direction: column;
+}
+
+.sidebar.collapsed {
+	width: 64px;
+}
+
+.sidebar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px;
+}
+
+.sidebar-title {
+	font-size: 1.25rem;
+	font-weight: bold;
+	margin: 0;
+}
+
+.sidebar-toggle {
+	background: transparent;
+	border: none;
+	color: white;
+	cursor: pointer;
+	padding: 8px;
+}
+
+.sidebar-toggle:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+}
+
+.sidebar-menu {
+	display: flex;
+	flex-direction: column;
+	padding-top: 16px;
+}
+
+.sidebar-link {
+	display: flex;
+	align-items: center;
+	padding: 12px 16px;
+	text-decoration: none;
+	color: white;
+	margin: 4px 0;
+	transition: background-color 0.2s;
+}
+
+.sidebar-link:hover {
+	background-color: #2563eb; /* Blue 700 equivalent */
+	color: white;
+}
+
+.sidebar-link.active {
+	background-color: #1d4ed8; /* Blue 800 equivalent */
+	color: white;
+}
+
+.sidebar-link i {
+	font-size: 1.25rem;
+	width: 20px;
+	text-align: center;
+}
+
+.sidebar-link .link-text {
+	margin-left: 12px;
+	white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-title, .sidebar.collapsed .link-text {
+	display: none;
+}
+
+/* Main Content */
+.main-content {
+	flex: 1;
+	padding: 24px;
+	overflow-y: auto;
+}
+
+/* Stat Cards */
+.stat-card {
+	border-radius: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.125);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+	font-size: 1.25rem;
+	color: #6b7280; /* Text muted equivalent */
+}
+
+.stat-title {
+	font-size: 0.875rem;
+	color: #6b7280; /* Text muted equivalent */
+	margin-bottom: 4px;
+}
+
+.stat-value {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin: 0;
+}
+
+/* Chart Container */
+.chart-container {
+	height: 320px;
+	width: 100%;
+}
+
+/* Product Visualization */
+.product-visualization {
+	height: 256px;
+	background-color: #312e81; /* Indigo 950 equivalent */
+	border-radius: 50%;
+}
+
+/* Status Badges */
+.status {
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	display: inline-block;
+	text-align: center;
+}
+
+.status.pending {
+	background-color: #fff8e6;
+	color: #d97706; /* Amber 500 equivalent */
+}
+
+.status.urgent {
+	background-color: #fef2f2;
+	color: #ef4444; /* Red 500 equivalent */
+}
+
+.status.completed {
+	background-color: #ecfdf5;
+	color: #10b981; /* Green 500 equivalent */
+}
+
+/* Orders Page Styles */
+.orders-container {
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+.search-wrapper {
+	width: 300px;
+}
+
+.order-table {
+	font-size: 0.9rem;
+}
+
+.order-table th {
+	font-weight: 600;
+	color: #4b5563;
+	border-bottom-width: 1px;
+}
+
+.order-table td {
+	vertical-align: middle;
+}
+
+.order-table .form-check {
+	margin: 2;
+}
+
+/* Responsive Adjustments */
+@media ( max-width : 768px) {
+	.sidebar {
+		width: 64px;
+	}
+	.sidebar .sidebar-title, .sidebar .link-text {
+		display: none;
+	}
+	.main-content {
+		padding: 16px;
+	}
+	.orders-container .btn-group {
+		display: flex;
+		flex-direction: column;
+	}
+	.orders-container .btn-group .btn {
+		margin-bottom: 8px;
+		margin-right: 0 !important;
+	}
+	.search-wrapper {
+		width: 100%;
+		margin-bottom: 16px;
+	}
+}
+
+.action-buttons {
+	position: absolute;
+	right: 20px;
+	top: 150px;
+	display: flex;
+	gap: 10px;
+}
+
+@media ( max-width : 992px) {
+	.orders-container .d-flex {
+		flex-direction: column;
+	}
+	.orders-container .d-flex .btn {
+		margin-bottom: 8px;
+	}
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+	transition: 0.3s ease;
+}
+</style>
+</head>
+<body>
+	<div class="dashboard-container">
+		<!-- Sidebar -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-header">
+				<h2 class="sidebar-title">Dashboard</h2>
+				<button class="btn sidebar-toggle" id="sidebarToggle">
+					<i class="fa fa-bars"></i>
+				</button>
+			</div>
+			<div class="sidebar-menu">
+				<div class="profile">
+					<a href="#" class="profile-link"> <img
+						src="https://via.placeholder.com/50" alt="Owner"
+						class="profile-image"> <span class="owner-name">Owner</span>
+					</a>
+				</div>
+				<a href="Home.html" class="sidebar-link active"> <i
+					class="fa fa-home"></i> <span class="link-text">Home</span>
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+					<span class="link-text">Analytics</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i
+					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
+					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
+					href="Order.jsp" class="sidebar-link"> <i
+						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
+				</a>
+
+				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
+					<span class="link-text">Billing</span>
+				</a> <a href="logout.jsp" class="sidebar-link"> <i
+					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
+				</a>
+
+			</div>
+		</div>
+
+
+		<div class="container">
+			<h2>Place Order</h2>
+			<form action="SaveOrder.jsp" method="post" id="orderForm">
+
+
+				<!-- Retailer Dropdown -->
+				<div class="form-group mb-3">
+					<label for="retailer">Select Retailer:</label> <select
+						class="form-control" id="retailer" name="retailerId" required
+						onchange="setCustomerFromRetailer()">
+						<option value="" disabled selected>Choose Retailer</option>
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("id")%>"
+							data-contact="<%=rs.getString("contact_name")%>">
+							<%=rs.getString("name")%>
+						</option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading retailers.");
+						}
+						%>
+					</select>
+				</div>
+
+				<!-- Auto-filled Customer Contact Name -->
+				<div class="form-group mb-3">
+					<label for="customer">Customer Contact Name:</label> <input
+						type="text" class="form-control" id="customer" name="customerName"
+						readonly />
+				</div>
+
+				<!-- Product Dropdown -->
+				<div class="form-group mb-3">
+					<label for="product">Select Product:</label> <select
+						class="form-control" id="product">
+						<%
+						try {
+							Class.forName("com.mysql.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name,quantity_in_stock,unit_price FROM products");
+							while (rs.next()) {
+							 
+						%>
+						<option value="<%=rs.getInt("product_id")%>data-price="<%=rs.getDouble("unit_price")%>"
+        data-stock="<%=rs.getInt("quantity_in_stock")%>"><%=rs.getString("product_name")%></option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading products.");
+						}
+						%>
+					</select>
+				</div>
+
+				<!-- Price and Quantity Inputs -->
+				<div class="form-group mb-3">
+					<label for="price">Unit Price (with 12% margin):</label> <input
+						type="number" class="form-control" id="price" step="0.01" readonly>
+				</div>
+
+
+				<div class="form-group mb-3">
+					<label for="quantity">Quantity:</label> <input type="number"
+						class="form-control" id="quantity">
+				</div>
+
+				<!-- Add Product -->
+				<button type="button" class="btn btn-success mb-3"
+					onclick="addProduct()">Add Product</button>
+
+				<!-- Product Table -->
+				<table class="table table-bordered" id="productTable">
+					<thead>
+						<tr>
+							<th>Product</th>
+							<th>Unit Price</th>
+							<th>Quantity</th>
+							<th>Subtotal</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+
+				<!-- Total -->
+				<div class="form-group">
+					<h5>
+						Total: ₹ <span id="total">0.00</span>
+					</h5>
+				</div>
+
+				<!-- Submit -->
+				<button type="submit" class="btn btn-primary">Submit Order</button>
+			</form>
+			<div class="card">
+				<div class="card-body p-0">
+					<div class="table-responsive">
+						<table class="table customer-table mb-0">
+							<thead>
+								<tr>
+									<th>
+										<div class="form-check">
+											<input class="form-check-input" type="checkbox"
+												id="selectAll"> <label class="form-check-label"
+												for="selectAll"></label>
+										</div>
+									</th>
+									<th>id</th>
+									<th>reatiler_id</th>
+									<th>order_date</th>
+									<th>total_amount</th>
+									<th>Quntity of order</th>
+
+								</tr>
+							</thead>
+							<tbody>
+								<%
+								Connection conn = null;
+								Statement stmt = null;
+								ResultSet rs = null;
+
+								String driverNm = "com.mysql.cj.jdbc.Driver";
+								String url = "jdbc:mysql://localhost:3307/inventory";
+
+								try {
+									Class.forName(driverNm);
+									conn = DriverManager.getConnection(url, "root", "");
+									stmt = conn.createStatement();
+									rs = stmt.executeQuery("SELECT o.*, IFNULL(q.total_quantity, 0) AS total_quantity " + "FROM orders o "
+									+ "LEFT JOIN (" + "  SELECT order_id, SUM(quantity) AS total_quantity " + "  FROM order_items "
+									+ "  GROUP BY order_id" + ") q ON o.id = q.order_id");
+
+									while (rs.next()) {
+								%>
+
+
+								<tr>
+									<td>
+										<div class="form-check">
+											<input class="form-check-input" type="checkbox">
+										</div>
+									</td>
+									<td><%=rs.getString("id")%></td>
+									<td><%=rs.getString("retailer_id")%></td>
+									<td><%=rs.getString("order_date")%></td>
+									<td><%=rs.getInt("total_amount")%></td>
+									<td><%=rs.getInt("total_quantity")%></td>
+									<td>
+										<form action="deleteOrder.jsp" method="post"
+											onsubmit="return confirm('Are you sure you want to delete this order?');">
+											<input type="hidden" name="orderId"
+												value="<%=rs.getString("id")%>">
+											<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+										</form>
+									</td>
+
+								</tr>
+								<%
+								}
+								} catch (Exception e) {
+								out.println("Error: " + e.getMessage());
+								} finally {
+								try {
+								if (rs != null)
+									rs.close();
+								} catch (Exception e) {
+								}
+								try {
+								if (stmt != null)
+									stmt.close();
+								} catch (Exception e) {
+								}
+								try {
+								if (conn != null)
+									conn.close();
+								} catch (Exception e) {
+								}
+								}
+								%>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- Bootstrap JS -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+		<script>
+			// Wait for the DOM to be fully loaded
+			document.addEventListener('DOMContentLoaded', function() {
+				// Sidebar toggle functionality
+				const sidebarToggle = document.getElementById('sidebarToggle');
+				const sidebar = document.getElementById('sidebar');
+
+				sidebarToggle.addEventListener('click', function() {
+					sidebar.classList.toggle('collapsed');
+				});
+
+				// Check if we're on mobile
+				function checkMobile() {
+					if (window.innerWidth < 768) {
+						sidebar.classList.add('collapsed');
+					} else {
+						sidebar.classList.remove('collapsed');
+					}
+				}
+
+				// Initial check
+				checkMobile();
+
+				// Listen for window resize
+				window.addEventListener('resize', checkMobile);
+
+				// Initialize Sales Chart
+				const salesChartCtx = document.getElementById('salesChart')
+						.getContext('2d');
+				const salesChart = new Chart(salesChartCtx, {
+					type : 'bar',
+					data : {
+						labels : [ 'Jan', 'Feb', 'Mar', 'Apr' ],
+						datasets : [ {
+							label : 'Previous',
+							data : [ 65, 75, 85, 90 ],
+							backgroundColor : '#FFD700', // Gold color
+						}, {
+							label : 'Current',
+							data : [ 80, 65, 70, 75 ],
+							backgroundColor : '#6366F1', // Indigo color
+						} ]
+					},
+					options : {
+						responsive : true,
+						maintainAspectRatio : false,
+						scales : {
+							y : {
+								beginAtZero : true,
+								grid : {
+									drawBorder : false,
+									color : 'rgba(200, 200, 200, 0.2)',
+								}
+							},
+							x : {
+								grid : {
+									display : false
+								}
+							}
+						},
+						plugins : {
+							legend : {
+								position : 'top',
+							}
+						}
+					}
+				});
+			});
+
+			
+			// Set customer input from selected retailer's contact
+			function setCustomerFromRetailer() {
+				var retailerSelect = document.getElementById("retailer");
+				var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+				var contactName = selectedOption.getAttribute("data-contact");
+				document.getElementById("customer").value = contactName;
+			}
+		 
+			let totalAmount = 0;
+
+			function addProduct() {
+				const productDropdown = document.getElementById("product");
+				const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+				const productName = selectedOption.text;
+				const productId = selectedOption.value;
+
+				const priceInput = document.getElementById("price");
+				const quantityInput = document.getElementById("quantity");
+
+				const price = parseFloat(priceInput.value);
+				const quantity = parseInt(quantityInput.value);
+
+				if (!price || !quantity || price <= 0 || quantity <= 0) {
+					alert("Please enter valid price and quantity");
+					return;
+				}
+
+				const subtotal = price * quantity;
+				totalAmount += subtotal;
+
+				// Add row to table
+				const tableBody = document.getElementById("productTable")
+						.getElementsByTagName("tbody")[0];
+				const newRow = tableBody.insertRow();
+
+				newRow.insertCell(0).innerText = productName;
+				newRow.insertCell(1).innerText = price.toFixed(2);
+				newRow.insertCell(2).innerText = quantity;
+				newRow.insertCell(3).innerText = subtotal.toFixed(2);
+
+				// Add a remove button
+				const actionCell = newRow.insertCell(4);
+				const removeBtn = document.createElement("button");
+				removeBtn.type = "button";
+				removeBtn.className = "btn btn-danger btn-sm";
+				removeBtn.innerText = "Remove";
+
+				// Append hidden inputs to form for submission
+				const form = document.getElementById("orderForm");
+
+				const hiddenProductId = document.createElement("input");
+				hiddenProductId.type = "hidden";
+				hiddenProductId.name = "productId[]";
+				hiddenProductId.value = productId;
+				form.appendChild(hiddenProductId);
+
+				const hiddenUnitPrice = document.createElement("input");
+				hiddenUnitPrice.type = "hidden";
+				hiddenUnitPrice.name = "unitPrice[]";
+				hiddenUnitPrice.value = price.toFixed(2);
+				form.appendChild(hiddenUnitPrice);
+
+				const hiddenQuantity = document.createElement("input");
+				hiddenQuantity.type = "hidden";
+				hiddenQuantity.name = "quantity[]";
+				hiddenQuantity.value = quantity;
+				form.appendChild(hiddenQuantity);
+
+				const hiddenSubtotal = document.createElement("input");
+				hiddenSubtotal.type = "hidden";
+				hiddenSubtotal.name = "subtotal[]";
+				hiddenSubtotal.value = subtotal.toFixed(2);
+				form.appendChild(hiddenSubtotal);
+
+				removeBtn.onclick = function() {
+					totalAmount -= subtotal;
+					document.getElementById("total").innerText = totalAmount
+							.toFixed(2);
+					newRow.remove();
+					// Remove corresponding hidden inputs
+					form.removeChild(hiddenProductId);
+					form.removeChild(hiddenUnitPrice);
+					form.removeChild(hiddenQuantity);
+					form.removeChild(hiddenSubtotal);
+				};
+
+				actionCell.appendChild(removeBtn);
+
+				// Update total amount display
+				document.getElementById("total").innerText = totalAmount
+						.toFixed(2);
+
+				// Clear inputs
+				priceInput.value = "";
+				quantityInput.value = "";
+			}
+		</script>
+</body>
+</html>

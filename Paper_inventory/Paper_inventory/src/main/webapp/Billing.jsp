@@ -338,7 +338,7 @@ body {
 										</th>
 										<th>Bill ID</th>
 										<th>Product Name</th>
-										<th>Unit Price</th>
+										<th>Total Amount</th>
 										<th>Quantity in Stock</th>
 										<th>billing date</th>
 
@@ -380,8 +380,9 @@ body {
 										</td>
 										<td><%=rs.getString("bill_id")%></td>
 										<td><%=rs.getString("retailer_name")%></td>
-										<td><%=rs.getInt("stock_quantity")%></td>
+										
 										<td><%=rs.getDouble("amount")%></td>
+										<td><%=rs.getInt("stock_quantity")%></td>
 										<td><%=rs.getString("billing_date")%></td>
 
 									</tr>

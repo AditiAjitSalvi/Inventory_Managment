@@ -349,10 +349,15 @@ body {
 							Class.forName("com.mysql.jdbc.Driver");
 							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
 							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name,quantity_in_stock,unit_price FROM products");
 							while (rs.next()) {
+							 
 						%>
-						<option value="<%=rs.getInt("product_id")%>"><%=rs.getString("product_name")%></option>
+						<option value="<%=rs.getInt("product_id")%>"
+							data-price="<%=rs.getDouble("unit_price")%>"
+							data-stock="<%=rs.getInt("quantity_in_stock")%>">
+							<%=rs.getString("product_name")%>
+						</option>
 						<%
 						}
 						con.close();
@@ -365,9 +370,10 @@ body {
 
 				<!-- Price and Quantity Inputs -->
 				<div class="form-group mb-3">
-					<label for="price">Unit Price:</label> <input type="number"
-						class="form-control" id="price" step="0.01">
+					<label for="price">Unit Price (with 12% margin):</label> <input
+						type="number" class="form-control" id="price" step="0.01" readonly>
 				</div>
+
 
 				<div class="form-group mb-3">
 					<label for="quantity">Quantity:</label> <input type="number"
@@ -568,6 +574,7 @@ body {
 				});
 			});
 
+			
 			// Set customer input from selected retailer's contact
 			function setCustomerFromRetailer() {
 				var retailerSelect = document.getElementById("retailer");
@@ -575,7 +582,21 @@ body {
 				var contactName = selectedOption.getAttribute("data-contact");
 				document.getElementById("customer").value = contactName;
 			}
+		 
+			document.getElementById('product').addEventListener('change', function () {
+				const selectedOption = this.options[this.selectedIndex];
+				const basePrice = parseFloat(selectedOption.getAttribute('data-price'));
+				const stockSize = parseInt(selectedOption.getAttribute('data-stock'));
 
+				if (!isNaN(basePrice) && !isNaN(stockSize) && stockSize > 0) {
+					const totalWithMargin = basePrice + (basePrice * 0.12); // add 12% margin
+					const unitPrice = totalWithMargin / stockSize; // divide by quantity_in_stock
+					const roundedPrice = Math.round(unitPrice); // round to nearest whole number
+					document.getElementById('price').value = roundedPrice;
+				} else {
+					document.getElementById('price').value = '';
+				}
+			});
 			let totalAmount = 0;
 
 			function addProduct() {
