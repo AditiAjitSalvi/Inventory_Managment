@@ -1,19 +1,19 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
-<%@page import="java.sql.PreparedStatement"%>
+<%@ page import="java.sql.*"%>
 <%@page import="java.sql.DriverManager"%>
 <%@page import="com.mysql.cj.jdbc.Driver"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.Statement"%>
 <%@page import="java.sql.Connection"%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orders</title>
+<title>Create Purchase Order</title>
 <!-- Bootstrap CSS -->
-
 <link
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
 	rel="stylesheet">
@@ -264,7 +264,6 @@ body {
 </head>
 <body>
 	<div class="dashboard-container">
-		<!-- Sidebar -->
 		<div class="sidebar" id="sidebar">
 			<div class="sidebar-header">
 				<h2 class="sidebar-title">Dashboard</h2>
@@ -273,151 +272,268 @@ body {
 				</button>
 			</div>
 			<div class="sidebar-menu">
-				<div class="profile">
-					<a href="#" class="profile-link"> <img
-						src="https://via.placeholder.com/50" alt="Owner"
-						class="profile-image"> <span class="owner-name">Owner</span>
-					</a>
-				</div>
-				<a href="Home.html" class="sidebar-link active"> <i
-					class="fa fa-home"></i> <span class="link-text">Home</span>
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
-					<span class="link-text">Analytics</span>
-				</a> <a href="Product.jsp" class="sidebar-link"> <i
-					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
-				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
-					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
-					href="Order.jsp" class="sidebar-link"> <i
-						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
-				</a>
-
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
-					<span class="link-text">Billing</span>
-				</a> <a href="logout.jsp" class="sidebar-link"> <i
-					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
-				</a>
-
+				<a href="Home.jsp" class="sidebar-link active"><i
+					class="fa fa-home"></i><span class="link-text">Home</span></a> <a
+					href="" class="sidebar-link"><i class="fa fa-chart-bar"></i><span
+					class="link-text">Supplier</span></a> <a href="Product.jsp"
+					class="sidebar-link"><i class="fa fa-shopping-bag"></i><span
+					class="link-text">Products</span></a> <a href="Retailer.jsp"
+					class="sidebar-link"><i class="fa fa-users"></i><span
+					class="link-text">Retailer</span></a> <a href="Order.jsp"
+					class="sidebar-link"><i class="fa fa-shopping-cart"></i><span
+					class="link-text">Orders</span></a> <a href="Billing.jsp"
+					class="sidebar-link"><i class="fa fa-file-invoice"></i><span
+					class="link-text">Billing</span></a> <a href="Login.html"
+					class="sidebar-link"><i class="fa fa-sign-out-alt"></i><span
+					class="link-text">Logout</span></a>
 			</div>
 		</div>
-		<link
-			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-			rel="stylesheet" />
-		<script
-			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+		<div class="main-content container mt-5">
+			<h2>Restock Products</h2>
+			<form action="SavePurchase.jsp" method="post" id="purchaseForm">
+				<div class="mb-3">
+					<label for="product" class="form-label">Select Product:</label> <select
+						class="form-control" id="product" name="product">
+						<option value="" disabled selected>Choose a Product</option>
+						<%
+						try {
+							Class.forName("com.mysql.cj.jdbc.Driver");
+							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+							Statement stmt = con.createStatement();
+							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+							while (rs.next()) {
+						%>
+						<option value="<%=rs.getInt("product_id")%>"
+							data-name="<%=rs.getString("product_name")%>">
+							<%=rs.getString("product_name")%>
+						</option>
+						<%
+						}
+						con.close();
+						} catch (Exception e) {
+						out.println("Error loading products: " + e.getMessage());
+						}
+						%>
+					</select>
+				</div>
+
+				<div class="mb-3">
+					<label for="quantity" class="form-label">Quantity:</label> <input
+						type="number" class="form-control" id="quantity" min="1"
+						placeholder="Enter quantity">
+				</div>
+
+				<button type="button" class="btn btn-success mb-3"
+					onclick="addProduct()">Add Product</button>
 
 
+				<table class="table table-bordered mt-3" id="productTable">
+					<thead>
+						<tr>
+							<th>Product Name</th>
+							<th>Quantity</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Dynamically filled by JS -->
+					</tbody>
+				</table>
 
-		<form action="SaveOrderServlet" method="post" class="container mt-4">
-			<!-- Retailer Dropdown -->
-			<div class="form-group">
-				<label for="retailer">Select Retailer:</label> <select
-					class="form-control" id="retailer" name="retailerId" required>
-					<%
-					try {
-						Class.forName("com.mysql.jdbc.Driver");
-						Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
-						Statement stmt = con.createStatement();
-						ResultSet rs = stmt.executeQuery("SELECT id , name FROM retailers");
-						while (rs.next()) {
-					%>
-					<option value="<%=rs.getInt("id")%>"><%=rs.getString("name")%></option>
-					<%
-					}
-					con.close();
-					} catch (Exception e) {
-					out.println("Error loading retailers.");
-					}
-					%>
-				</select>
-			</div>
+				<button type="submit" class="btn btn-primary">Place Order</button>
 
-			<!-- Customer Name -->
-			<div class="form-group">
-				<label for="customer">Select Customer:</label> <select
-					class="form-control" id="customer" name="customerId" required>
-					<%
-					try {
-						Class.forName("com.mysql.jdbc.Driver");
-						Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
-						Statement stmt = con.createStatement();
-						ResultSet rs = stmt.executeQuery("SELECT id ,contact_name as name FROM retailers where name=");
-						while (rs.next()) {
-					%>
-					<option value="<%=rs.getInt("id")%>"><%=rs.getString("name")%></option>
-					<%
-					}
-					con.close();
-					} catch (Exception e) {
-					out.println("Error loading customers.");
-					}
-					%>
-				</select>
-			</div>
 
-			<!-- Product Section -->
-			<h4>Add Products</h4>
+			</form>
+		</div>
+	</div>
 
-			<div class="form-group">
-				<label for="product">Product:</label> <select class="form-control"
-					id="product">
-					<%
-					try {
-						Class.forName("com.mysql.jdbc.Driver");
-						Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
-						Statement stmt = con.createStatement();
-						ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
-						while (rs.next()) {
-					%>
-					<option value="<%=rs.getInt("product_id")%>"><%=rs.getString("product_name")%></option>
-					<%
-					}
-					con.close();
-					} catch (Exception e) {
-					out.println("Error loading products.");
-					}
-					%>
-				</select>
-			</div>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!--	<script>
+	
+	// Wait for the DOM to be fully loaded
+	document.addEventListener('DOMContentLoaded', function() {
+		// Sidebar toggle functionality
+		const sidebarToggle = document.getElementById('sidebarToggle');
+		const sidebar = document.getElementById('sidebar');
 
-			<div class="form-group">
-				<label for="price">Unit Price:</label> <input type="number"
-					class="form-control" id="price" step="0.01">
-			</div>
+		sidebarToggle.addEventListener('click', function() {
+			sidebar.classList.toggle('collapsed');
+		});
 
-			<div class="form-group">
-				<label for="quantity">Quantity:</label> <input type="number"
-					class="form-control" id="quantity">
-			</div>
+		// Check if we're on mobile
+		function checkMobile() {
+			if (window.innerWidth < 768) {
+				sidebar.classList.add('collapsed');
+			} else {
+				sidebar.classList.remove('collapsed');
+			}
+		}
 
-			<div class="form-group">
-				<button type="button" class="btn btn-success" onclick="addProduct()">Add
-					Product</button>
-			</div>
+		// Initial check
+		checkMobile();
 
-			<!-- Product Table -->
-			<table class="table table-bordered mt-3" id="productTable">
-				<thead class="thead-dark">
-					<tr>
-						<th>Product</th>
-						<th>Price</th>
-						<th>Quantity</th>
-						<th>Subtotal</th>
-					</tr>
-				</thead>
-				<tbody>
-					<!-- Filled by JS -->
-				</tbody>
-			</table>
+		// Listen for window resize
+		window.addEventListener('resize', checkMobile);
+  let purchaseProducts = [];
 
-			<!-- Total Amount -->
-			<div class="form-group">
-				<h5>
-					Total: ₹ <span id="total">0.00</span>
-				</h5>
-			</div>
+  function addProduct() {
+	  const productSelect = document.getElementById('product');
+	  const selectedOption = productSelect.options[productSelect.selectedIndex];
+	  const quantityInput = document.getElementById('quantity');
+	  const tableBody = document.getElementById('productTable').getElementsByTagName('tbody')[0];
 
-			<!-- Submit -->
-			<button type="submit" class="btn btn-primary">Submit Order</button>
-		</form>
+	  const productId = productSelect.value;
+	  const productName = selectedOption.getAttribute('data-name') || selectedOption.text;
+	  const quantity = parseInt(quantityInput.value);
+
+	  if (!productId) {
+	    alert("Please select a product.");
+	    return;
+	  }
+
+	  if (isNaN(quantity) || quantity <= 0) {
+	    alert("Please enter a valid quantity.");
+	    return;
+	  }
+
+	  if (purchaseProducts.some(p => p.productId === productId)) {
+	    alert("Product already added. Remove it before adding again.");
+	    return;
+	  }
+
+	  // Add to array
+	  purchaseProducts.push({ productId, productName, quantity });
+
+	  // Add to table
+	  const newRow = tableBody.insertRow();
+	  newRow.setAttribute("data-product-id", productId);
+
+	  // Use insertCell instead of innerHTML
+	  const cell0 = newRow.insertCell(0);
+	  cell0.innerText = productName;
+	  const hiddenInputId = document.createElement("input");
+	  hiddenInputId.type = "hidden";
+	  hiddenInputId.name = "productId[]";
+	  hiddenInputId.value = productId;
+	  cell0.appendChild(hiddenInputId);
+
+	  const cell1 = newRow.insertCell(1);
+	  cell1.innerText = quantity;
+	  const hiddenInputQty = document.createElement("input");
+	  hiddenInputQty.type = "hidden";
+	  hiddenInputQty.name = "quantity[]";
+	  hiddenInputQty.value = quantity;
+	  cell1.appendChild(hiddenInputQty);
+
+	  const cell2 = newRow.insertCell(2);
+	  cell2.innerHTML = `<button type="button" class="btn btn-danger btn-sm" onclick="removeProduct(this)">Remove</button>`;
+
+	  // Reset form
+	  productSelect.selectedIndex = 0;
+	  quantityInput.value = "";
+	}
+
+
+  function removeProduct(button) {
+    const row = button.closest("tr");
+    const productId = row.getAttribute("data-product-id");
+
+    // Remove from array
+    purchaseProducts = purchaseProducts.filter(p => p.productId !== productId);
+
+    // Remove row
+    row.remove();
+  }
+</script>-->
+<script>
+  // Sidebar toggle
+  document.addEventListener('DOMContentLoaded', function () {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+
+    sidebarToggle.addEventListener('click', function () {
+      sidebar.classList.toggle('collapsed');
+    });
+
+    function checkMobile() {
+      if (window.innerWidth < 768) {
+        sidebar.classList.add('collapsed');
+      } else {
+        sidebar.classList.remove('collapsed');
+      }
+    }
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+  });
+
+  // Move these outside the DOMContentLoaded so they are in global scope
+  let purchaseProducts = [];
+
+  function addProduct() {
+    const productSelect = document.getElementById('product');
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const quantityInput = document.getElementById('quantity');
+    const tableBody = document.getElementById('productTable').getElementsByTagName('tbody')[0];
+
+    const productId = productSelect.value;
+    const productName = selectedOption.getAttribute('data-name') || selectedOption.text;
+    const quantity = parseInt(quantityInput.value);
+
+    if (!productId) {
+      alert("Please select a product.");
+      return;
+    }
+
+    if (isNaN(quantity) || quantity <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    if (purchaseProducts.some(p => p.productId === productId)) {
+      alert("Product already added. Remove it before adding again.");
+      return;
+    }
+
+    purchaseProducts.push({ productId, productName, quantity });
+
+    const newRow = tableBody.insertRow();
+    newRow.setAttribute("data-product-id", productId);
+
+    const cell0 = newRow.insertCell(0);
+    cell0.innerText = productName;
+    const hiddenInputId = document.createElement("input");
+    hiddenInputId.type = "hidden";
+    hiddenInputId.name = "productId[]";
+    hiddenInputId.value = productId;
+    cell0.appendChild(hiddenInputId);
+
+    const cell1 = newRow.insertCell(1);
+    cell1.innerText = quantity;
+    const hiddenInputQty = document.createElement("input");
+    hiddenInputQty.type = "hidden";
+    hiddenInputQty.name = "quantity[]";
+    hiddenInputQty.value = quantity;
+    cell1.appendChild(hiddenInputQty);
+
+    const cell2 = newRow.insertCell(2);
+    cell2.innerHTML = `<button type="button" class="btn btn-danger btn-sm" onclick="removeProduct(this)">Remove</button>`;
+
+    productSelect.selectedIndex = 0;
+    quantityInput.value = "";
+  }
+
+  function removeProduct(button) {
+    const row = button.closest("tr");
+    const productId = row.getAttribute("data-product-id");
+
+    purchaseProducts = purchaseProducts.filter(p => p.productId !== productId);
+    row.remove();
+  }
+</script>
+
+
 </body>
 </html>

@@ -1,0 +1,99 @@
+<%@page import="com.mysql.cj.xdevapi.JsonArray"%>
+<%@ page import="java.sql.*"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+    <%@ page
+	import="java.text.SimpleDateFormat, java.io.StringWriter, java.io.PrintWriter, java.sql.*, com.mysql.cj.jdbc.Driver"%>
+    
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // Get form parameters - arrays of product IDs and quantities
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+
+    if (productIds == null || quantities == null || productIds.length != quantities.length) {
+        out.println("Invalid input data.");
+        return;
+    }
+
+    Connection con = null;
+    PreparedStatement psOrder = null;
+    PreparedStatement psOrderItem = null;
+    ResultSet rs = null;
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+        con.setAutoCommit(false);  // Start transaction
+
+        // 1. Insert into purchase_order table
+        // Assuming purchase_order has: order_id (auto_increment), order_date (current), etc.
+        String insertOrderSQL = "INSERT INTO purchase_order (order_date) VALUES (NOW())";
+        psOrder = con.prepareStatement(insertOrderSQL, Statement.RETURN_GENERATED_KEYS);
+        int orderResult = psOrder.executeUpdate();
+
+        if (orderResult == 0) {
+            throw new SQLException("Creating purchase order failed, no rows affected.");
+        }
+
+        // Get the generated order_id
+        rs = psOrder.getGeneratedKeys();
+        int orderId = 0;
+        if (rs.next()) {
+            orderId = rs.getInt(1);
+        } else {
+            throw new SQLException("Creating purchase order failed, no ID obtained.");
+        }
+
+        // 2. Insert items into purchase_order_item table
+        // Assuming purchase_order_item has: item_id (auto_increment), order_id (FK), product_id, quantity
+        String insertOrderItemSQL = "INSERT INTO purchase_order_item (order_id, product_id, quantity) VALUES (?, ?, ?)";
+        psOrderItem = con.prepareStatement(insertOrderItemSQL);
+
+        for (int i = 0; i < productIds.length; i++) {
+            int productId = Integer.parseInt(productIds[i]);
+            int quantity = Integer.parseInt(quantities[i]);
+
+            psOrderItem.setInt(1, orderId);
+            psOrderItem.setInt(2, productId);
+            psOrderItem.setInt(3, quantity);
+
+            psOrderItem.addBatch();
+        }
+
+        psOrderItem.executeBatch();
+
+        con.commit();
+
+        out.println("<div class='alert alert-success'>Purchase Order created successfully! Order ID: " + orderId + "</div>");
+        out.println("<a href='CreatePurchaseOrder.jsp' class='btn btn-primary'>Create Another Order</a>");
+
+    } catch (Exception e) {
+    	 if (con != null) {
+             try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+         }
+         out.println("<div style='color:red;'>Error: " + e.getMessage() + "</div>");
+         e.printStackTrace();
+    } finally {
+        try { if (rs != null) rs.close(); } catch (Exception e) {}
+        try { if (psOrderItem != null) psOrderItem.close(); } catch (Exception e) {}
+        try { if (psOrder != null) psOrder.close(); } catch (Exception e) {}
+        try { if (con != null) con.close(); } catch (Exception e) {}
+    }
+%>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<%@page import="com.mysql.cj.xdevapi.JsonArray"%>
+<%@ page import="java.sql.*"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+    <%@ page
+	import="java.text.SimpleDateFormat, java.io.StringWriter, java.io.PrintWriter, java.sql.*, com.mysql.cj.jdbc.Driver"%>
+    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Save Purchase Order</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container mt-5">
+<%
+    String[] productIds = request.getParameterValues("productId[]");
+    String[] quantities = request.getParameterValues("quantity[]");
+
+    if (productIds == null || quantities == null || productIds.length == 0) {
+%>
+    <div class="alert alert-danger">No products added to the order!</div>
+    <a href="CreatePurchaseOrder.jsp" class="btn btn-primary">Go Back</a>
+<%
+    } else {
+        Connection con = null;
+        PreparedStatement psOrder = null;
+        PreparedStatement psItem = null;
+        ResultSet rs = null;
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+
+            // Disable auto-commit for transaction
+            con.setAutoCommit(false);
+
+            // Insert into purchase_orders, order_date = current date
+            String insertOrderSql = "INSERT INTO purchase_orders (order_date) VALUES (CURDATE())";
+            psOrder = con.prepareStatement(insertOrderSql, Statement.RETURN_GENERATED_KEYS);
+            int affectedRows = psOrder.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating purchase order failed, no rows affected.");
+            }
+
+            // Get the generated purchase_order_id
+            rs = psOrder.getGeneratedKeys();
+            int purchaseOrderId = 0;
+            if (rs.next()) {
+                purchaseOrderId = rs.getInt(1);
+            } else {
+                throw new SQLException("Creating purchase order failed, no ID obtained.");
+            }
+
+            // Insert each product item
+            String insertItemSql = "INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity) VALUES (?, ?, ?)";
+            psItem = con.prepareStatement(insertItemSql);
+
+            for (int i = 0; i < productIds.length; i++) {
+                int productId = Integer.parseInt(productIds[i]);
+                int quantity = Integer.parseInt(quantities[i]);
+
+                psItem.setInt(1, purchaseOrderId);
+                psItem.setInt(2, productId);
+                psItem.setInt(3, quantity);
+
+                psItem.addBatch();
+            }
+            psItem.executeBatch();
+
+            // Commit transaction
+            con.commit();
+%>
+            <div class="alert alert-success">Purchase Order created successfully with ID: <%= purchaseOrderId %></div>
+<a href="CreatePurchaseOrder.jsp" class="btn btn-primary">Create New Order</a>
+            
+<%
+        } catch (Exception e) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    out.println("Rollback failed: " + ex.getMessage());
+                }
+            }
+%>
+            <div class="alert alert-danger">Error saving purchase order: <%= e.getMessage() %></div>
+            <a href="CreatePurchaseOrder.jsp" class="btn btn-primary">Try Again</a>
+<%
+        } finally {
+            if (rs != null) try { rs.close(); } catch (SQLException ignored) {}
+            if (psOrder != null) try { psOrder.close(); } catch (SQLException ignored) {}
+            if (psItem != null) try { psItem.close(); } catch (SQLException ignored) {}
+            if (con != null) try { con.close(); } catch (SQLException ignored) {}
+        }
+    }
+%>
+<script>
+    alert("Purchase Order created successfully with ID: <%= purchaseOrderId %>");
+    window.location.href = "CreatePurchaseOrder.jsp";
+</script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

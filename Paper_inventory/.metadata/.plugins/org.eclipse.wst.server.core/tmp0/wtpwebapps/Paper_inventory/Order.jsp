@@ -272,30 +272,23 @@ body {
 				</button>
 			</div>
 			<div class="sidebar-menu">
-				<div class="profile">
-					<a href="#" class="profile-link"> <img
-						src="https://via.placeholder.com/50" alt="Owner"
-						class="profile-image"> <span class="owner-name">Owner</span>
-					</a>
-				</div>
-				<a href="Home.html" class="sidebar-link active"> <i
-					class="fa fa-home"></i> <span class="link-text">Home</span>
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
-					<span class="link-text">Analytics</span>
-				</a> <a href="Product.jsp" class="sidebar-link"> <i
-					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
-				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
-					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
-					href="Order.jsp" class="sidebar-link"> <i
-						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
+				<a href="Home.jsp" class="sidebar-link active"> <i class="fa fa-home"></i>
+					<span class="link-text">Home</span>
+				</a> <a href="Purchase_order.jsp" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+					<span class="link-text">Supplier</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i class="fa fa-shopping-bag"></i>
+					<span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i class="fa fa-users"></i> <span
+					class="link-text">Retailer</span> 
+					<a href="Order.jsp" class="sidebar-link">
+						<i class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
+				</a> <a href="Billing.jsp" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
 					<span class="link-text">Billing</span>
-				</a> <a href="logout.jsp" class="sidebar-link"> <i
+				</a> <a href="Login.html" class="sidebar-link"> <i
 					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
 				</a>
-
 			</div>
 		</div>
 
@@ -531,49 +524,7 @@ body {
 				// Listen for window resize
 				window.addEventListener('resize', checkMobile);
 
-				// Initialize Sales Chart
-				const salesChartCtx = document.getElementById('salesChart')
-						.getContext('2d');
-				const salesChart = new Chart(salesChartCtx, {
-					type : 'bar',
-					data : {
-						labels : [ 'Jan', 'Feb', 'Mar', 'Apr' ],
-						datasets : [ {
-							label : 'Previous',
-							data : [ 65, 75, 85, 90 ],
-							backgroundColor : '#FFD700', // Gold color
-						}, {
-							label : 'Current',
-							data : [ 80, 65, 70, 75 ],
-							backgroundColor : '#6366F1', // Indigo color
-						} ]
-					},
-					options : {
-						responsive : true,
-						maintainAspectRatio : false,
-						scales : {
-							y : {
-								beginAtZero : true,
-								grid : {
-									drawBorder : false,
-									color : 'rgba(200, 200, 200, 0.2)',
-								}
-							},
-							x : {
-								grid : {
-									display : false
-								}
-							}
-						},
-						plugins : {
-							legend : {
-								position : 'top',
-							}
-						}
-					}
-				});
-			});
-
+				
 			
 			// Set customer input from selected retailer's contact
 			function setCustomerFromRetailer() {

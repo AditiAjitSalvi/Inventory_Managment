@@ -1,11 +1,11 @@
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
 <%@page import="java.sql.DriverManager"%>
 <%@page import="com.mysql.cj.jdbc.Driver"%>
 <%@page import="java.sql.ResultSet"%>
 <%@page import="java.sql.Statement"%>
 <%@page import="java.sql.Connection"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-
 
 
 <!DOCTYPE html>
@@ -277,24 +277,23 @@ body {
 						class="profile-image"> <span class="owner-name">Owner</span>
 					</a>
 				</div>
-				<a href="Home.html" class="sidebar-link active"> <i
-					class="fa fa-home"></i> <span class="link-text">Home</span>
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
-					<span class="link-text">Analytics</span>
-				</a> <a href="Product.html" class="sidebar-link"> <i
-					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
-				</a> <a href="Retailer.html" class="sidebar-link"> <i
-					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
-					href="Order.html" class="sidebar-link"> <i
-						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
+				<a href="Home.jsp" class="sidebar-link active"> <i class="fa fa-home"></i>
+					<span class="link-text">Home</span>
+				</a> <a href="Purchase_order.jsp" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+					<span class="link-text">Supplier</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i class="fa fa-shopping-bag"></i>
+					<span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i class="fa fa-users"></i> <span
+					class="link-text">Retailer</span> 
+					<a href="Order.jsp" class="sidebar-link">
+						<i class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
+				</a> <a href="Billing.jsp" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
 					<span class="link-text">Billing</span>
-				</a> <a href="login.jsp" class="sidebar-link"> <i
+				</a> <a href="Login.html" class="sidebar-link"> <i
 					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
 				</a>
-
 			</div>
 		</div>
 
@@ -320,13 +319,7 @@ body {
 						</button>
 					</div>
 				</div>
-				<div class="d-flex"
-					style="right: 50px; top: 150px; display: flex; gap: 10px; margin-left: 980px;">
-					<button class="btn btn-outline-primary me-2">
-						<i class="fa fa-edit me-1"></i> <span>Update</span>
-					</button>
-
-				</div>
+				 
 
 
 				<div class="card">

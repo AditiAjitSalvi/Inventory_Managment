@@ -1,0 +1,75 @@
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.google.gson.Gson;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+@WebServlet("/upload")
+@MultipartConfig
+@WebServlet("/uploadServlet")
+
+public class UploadServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Part filePart = request.getPart("file");
+        if (filePart == null) {
+            request.setAttribute("error", "No file uploaded");
+            request.getRequestDispatcher("/charts.jsp").forward(request, response);
+            return;
+        }
+
+        Map<String, Integer> productSales = new HashMap<>();
+        Map<String, Integer> monthlySales = new TreeMap<>();
+        Map<Integer, Integer> yearlySales = new TreeMap<>();
+
+        try (InputStream inputStream = filePart.getInputStream(); Workbook workbook = new XSSFWorkbook(inputStream)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // skip header
+
+                Cell productCell = row.getCell(0);
+                Cell dateCell = row.getCell(1);
+                Cell quantityCell = row.getCell(2);
+
+                if (productCell == null || dateCell == null || quantityCell == null) continue;
+
+                String productName = productCell.getStringCellValue();
+                Date date = dateCell.getDateCellValue();
+                int quantity = (int) quantityCell.getNumericCellValue();
+
+                productSales.put(productName, productSales.getOrDefault(productName, 0) + quantity);
+
+                String month = new SimpleDateFormat("yyyy-MM").format(date);
+                monthlySales.put(month, monthlySales.getOrDefault(month, 0) + quantity);
+
+                int year = Integer.parseInt(new SimpleDateFormat("yyyy").format(date));
+                yearlySales.put(year, yearlySales.getOrDefault(year, 0) + quantity);
+            }
+        }
+
+        String topProduct = "";
+        if (!productSales.isEmpty()) {
+            topProduct = Collections.max(productSales.entrySet(), Map.Entry.comparingByValue()).getKey();
+        }
+
+        Gson gson = new Gson();
+        request.setAttribute("topProduct", topProduct);
+        request.setAttribute("productLabels", gson.toJson(productSales.keySet()));
+        request.setAttribute("productValues", gson.toJson(productSales.values()));
+        request.setAttribute("monthLabels", gson.toJson(monthlySales.keySet()));
+        request.setAttribute("monthValues", gson.toJson(monthlySales.values()));
+        request.setAttribute("yearLabels", gson.toJson(yearlySales.keySet()));
+        
+        request.setAttribute("yearValues", gson.toJson(yearlySales.values()));
+
+        request.getRequestDispatcher("/charts.jsp").forward(request, response);
+    }
+}

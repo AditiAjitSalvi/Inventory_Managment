@@ -1,0 +1,91 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Sales Analysis with Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Upload Sales Excel File</h2>
+
+<form method="post" action="uploadServlet" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".xlsx" required />
+    <button type="submit">Upload and Analyze</button>
+</form>
+
+<%
+    String error = (String) request.getAttribute("error");
+    if (error != null) {
+%>
+<p style="color:red;"><%= error %></p>
+<%
+    }
+
+    String topProduct = (String) request.getAttribute("topProduct");
+    if (topProduct != null && !topProduct.isEmpty()) {
+%>
+<h3>Most Sold Product: <%= topProduct %></h3>
+
+<canvas id="productChart" width="600" height="400"></canvas>
+<canvas id="monthlyChart" width="600" height="400" style="margin-top: 40px;"></canvas>
+<canvas id="yearlyChart" width="600" height="400" style="margin-top: 40px;"></canvas>
+
+<script>
+    const productLabels = <%= request.getAttribute("productLabels") %>;
+    const productData = <%= request.getAttribute("productValues") %>;
+
+    const monthLabels = <%= request.getAttribute("monthLabels") %>;
+    const monthData = <%= request.getAttribute("monthValues") %>;
+
+    const yearLabels = <%= request.getAttribute("yearLabels") %>;
+    const yearData = <%= request.getAttribute("yearValues") %>;
+
+    new Chart(document.getElementById('productChart'), {
+        type: 'bar',
+        data: {
+            labels: productLabels,
+            datasets: [{
+                label: 'Sales per Product',
+                data: productData,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Monthly Sales',
+                data: monthData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('yearlyChart'), {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Yearly Sales',
+                data: yearData,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)'
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+
+<%
+    }
+%>
+
+</body>
+</html>

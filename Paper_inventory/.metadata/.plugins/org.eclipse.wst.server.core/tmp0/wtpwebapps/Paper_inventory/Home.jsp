@@ -1,5 +1,9 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"   pageEncoding="UTF-8"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -184,6 +188,22 @@ body {
 	.main-content {
 		padding: 16px;
 	}
+.status.active {
+	background-color: #ecfdf5;
+	color: #10b981;
+}
+
+.status.inactive {
+	background-color: #fef2f2;
+	color: #ef4444;
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+	transition: 0.3s ease;
+}
+
 }
 </style>
 <body>
@@ -198,27 +218,22 @@ body {
 			</div>
 			<div class="sidebar-menu">
 
-				<div class="profile">
-					<a href="#" class="profile-link"> <img
-						src="https://via.placeholder.com/50" alt="Owner"
-						class="profile-image"> <span class="owner-name">Owner</span>
-					</a>
-				</div>
-				<a href="Home.html" class="sidebar-link active"> <i class="fa fa-home"></i>
+				 
+				<a href="Home.jsp" class="sidebar-link active"> <i class="fa fa-home"></i>
 					<span class="link-text">Home</span>
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
-					<span class="link-text">Analytics</span>
-				</a> <a href="Product.html" class="sidebar-link"> <i class="fa fa-shopping-bag"></i>
+				</a> <a href="Purchase_order.jsp" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
+					<span class="link-text">Supplier</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i class="fa fa-shopping-bag"></i>
 					<span class="link-text">Products</span>
-				</a> <a href="Retailer.html" class="sidebar-link"> <i class="fa fa-users"></i> <span
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i class="fa fa-users"></i> <span
 					class="link-text">Retailer</span> 
-					<a href="Order.html" class="sidebar-link">
+					<a href="Order.jsp" class="sidebar-link">
 						<i class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
-				</a> <a href="#" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
+				</a> <a href="Billing.jsp" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
 					<span class="link-text">Billing</span>
-				</a> <a href="logout.jsp" class="sidebar-link"> <i
+				</a> <a href="Login.html" class="sidebar-link"> <i
 					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
 				</a>
 			</div>
@@ -237,27 +252,13 @@ body {
 								</div>
 								<div>
 									<p class="stat-title">Revenue</p>
-									<h3 class="stat-value">$30,000</h3>
+									<h3 class="stat-value">1,406.2</h3>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="col-md-6 col-lg-3">
-					<div class="card stat-card">
-						<div class="card-body">
-							<div class="d-flex align-items-center">
-								<div class="stat-icon me-3">
-									<i class="fa fa-chart-line"></i>
-								</div>
-								<div>
-									<p class="stat-title">Sales Return</p>
-									<h3 class="stat-value">$30,000</h3>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+				
 				<div class="col-md-6 col-lg-3">
 					<div class="card stat-card">
 						<div class="card-body">
@@ -267,28 +268,13 @@ body {
 								</div>
 								<div>
 									<p class="stat-title">Purchase</p>
-									<h3 class="stat-value">$30,000</h3>
+									<h3 class="stat-value">900</h3>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="col-md-6 col-lg-3">
-					<div class="card stat-card">
-						<div class="card-body">
-							<div class="d-flex align-items-center">
-								<div class="stat-icon me-3">
-									<i class="fa fa-users"></i>
-								</div>
-								<div>
-									<p class="stat-title">Income</p>
-									<h3 class="stat-value">$30,000</h3>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+				
 
 			<!-- Charts Section -->
 			<div class="row mb-4">
@@ -326,47 +312,89 @@ body {
 						<div class="card-body">
 							<h5 class="card-title mb-4">Stock Alert</h5>
 							<div class="table-responsive">
-								<table class="table">
-									<thead>
-										<tr>
-											<th>Order ID</th>
-											<th>Date</th>
-											<th>Quantity</th>
-											<th>Alert amt.</th>
-											<th>Status</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td><strong>order-001</strong></td>
-											<td>2023-05-10</td>
-											<td>120</td>
-											<td>Low Stock</td>
-											<td><span class="status pending">Pending</span></td>
-										</tr>
-										<tr>
-											<td><strong>order-002</strong></td>
-											<td>2023-05-11</td>
-											<td>85</td>
-											<td>Out of Stock</td>
-											<td><span class="status urgent">Urgent</span></td>
-										</tr>
-										<tr>
-											<td><strong>order-003</strong></td>
-											<td>2023-05-12</td>
-											<td>65</td>
-											<td>Low Stock</td>
-											<td><span class="status pending">Pending</span></td>
-										</tr>
-										<tr>
-											<td><strong>order-004</strong></td>
-											<td>2023-05-13</td>
-											<td>50</td>
-											<td>Out of Stock</td>
-											<td><span class="status urgent">Urgent</span></td>
-										</tr>
-									</tbody>
-								</table>
+								<table class="table customer-table mb-0">
+								<thead>
+									<tr>
+										<th>
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox"
+													id="selectAll"> <label class="form-check-label"
+													for="selectAll"></label>
+											</div>
+										</th>
+										<th>product_id</th>
+										<th>product_name</th>
+										<th>unit_price</th>
+										<th>quantity_in_stock</th>
+										<th>Stock Status</th>
+
+									</tr>
+								</thead>
+								<tbody>
+									<%
+									Connection conn = null;
+									Statement stmt = null;
+									ResultSet rs = null;
+
+									String driverNm = "com.mysql.cj.jdbc.Driver";
+									String url = "jdbc:mysql://localhost:3307/inventory";
+
+									try {
+										Class.forName(driverNm);
+										conn = DriverManager.getConnection(url, "root", "");
+										stmt = conn.createStatement();
+										rs = stmt.executeQuery("SELECT * FROM products");
+
+										while (rs.next()) {
+									%>
+									<tr>
+										<td>
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox">
+											</div>
+										</td>
+										<td><%=rs.getString("product_id")%></td>
+										<td><%=rs.getString("product_name")%></td>
+										<td><%=rs.getString("unit_price")%></td>
+										<td><%=rs.getInt("quantity_in_stock") %></td>
+										<td><%
+										int quantity = rs.getInt("quantity_in_stock");
+										if (quantity < 50) {
+										%>
+										<span class="status inactive">Low Stock</span>
+										<%
+										} else {
+										%>
+										<span class="status active">In Stock</span>
+										<%
+										}
+										%></td>
+									</tr>
+									<%
+									}
+									} catch (Exception e) {
+									out.println("Error: " + e.getMessage());
+									} finally {
+									try {
+									if (rs != null)
+										rs.close();
+									} catch (Exception e) {
+									}
+									try {
+									if (stmt != null)
+										stmt.close();
+									} catch (Exception e) {
+									}
+									try {
+									if (conn != null)
+										conn.close();
+									} catch (Exception e) {
+									}
+									}
+									%>
+
+								</tbody>
+							</table>
 							</div>
 						</div>
 					</div>

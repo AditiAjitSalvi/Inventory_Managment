@@ -1,0 +1,92 @@
+<%@ page import="java.io.InputStream, java.util.*, java.text.SimpleDateFormat" %>
+<%@ page import="org.apache.poi.ss.usermodel.*, org.apache.poi.xssf.usermodel.XSSFWorkbook" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="jakarta.servlet.http.Part" %>
+
+
+<html>
+<head><title>Sales Prediction</title></head>
+<body>
+
+<h2>Upload Excel File for Sales Prediction</h2>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".xlsx" required />
+    <button type="submit">Upload & Analyze</button>
+</form>
+
+<%
+if ("POST".equalsIgnoreCase(request.getMethod())) {
+
+    filePart = request.getPart("file");
+    if (filePart == null) {
+%>
+        <p style="color:red;">No file uploaded.</p>
+<%
+    } else {
+        Map<String, Integer> productSalesLastYear = new HashMap<>();
+        Map<String, Integer> monthlySalesLastYear = new TreeMap<>();
+
+        Calendar cal = Calendar.getInstance();
+        int currentYear = cal.get(Calendar.YEAR);
+        int lastYear = currentYear - 1;
+
+        try (InputStream inputStream = filePart.getInputStream();
+             Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // skip header
+
+                Cell productCell = row.getCell(0);
+                Cell dateCell = row.getCell(1);
+                Cell quantityCell = row.getCell(2);
+
+                if (productCell == null || dateCell == null || quantityCell == null) continue;
+
+                String productName = productCell.getStringCellValue();
+                Date date = dateCell.getDateCellValue();
+
+                cal.setTime(date);
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH) + 1;
+
+                int quantity = (int) quantityCell.getNumericCellValue();
+
+                if (year == lastYear) {
+                    productSalesLastYear.put(productName, productSalesLastYear.getOrDefault(productName, 0) + quantity);
+
+                    String monthKey = String.format("%04d-%02d", year, month);
+                    monthlySalesLastYear.put(monthKey, monthlySalesLastYear.getOrDefault(monthKey, 0) + quantity);
+                }
+            }
+        } catch (Exception e) {
+%>
+            <p style="color:red;">Error processing file: <%= e.getMessage() %></p>
+<%
+            return;
+        }
+
+        String mostSellingProduct = "";
+        if (!productSalesLastYear.isEmpty()) {
+            mostSellingProduct = Collections.max(productSalesLastYear.entrySet(), Map.Entry.comparingByValue()).getKey();
+        }
+
+        int totalLastYearSales = monthlySalesLastYear.values().stream().mapToInt(Integer::intValue).sum();
+        int monthsCounted = monthlySalesLastYear.size() == 0 ? 1 : monthlySalesLastYear.size();
+        int avgMonthlySales = totalLastYearSales / monthsCounted;
+        int predictedSalesThisYear = avgMonthlySales * 12;
+%>
+
+<h3>Analysis Results</h3>
+<p><b>Most Selling Product Last Year:</b> <%= mostSellingProduct %></p>
+<p><b>Total Sales Last Year:</b> <%= totalLastYearSales %> units</p>
+<p><b>Predicted Sales for This Year:</b> <%= predictedSalesThisYear %> units</p>
+
+<%
+    }
+}
+%>
+
+</body>
+</html>

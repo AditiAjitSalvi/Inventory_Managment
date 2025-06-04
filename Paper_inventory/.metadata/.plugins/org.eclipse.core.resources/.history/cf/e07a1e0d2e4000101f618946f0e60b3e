@@ -1,0 +1,130 @@
+<%@ page import="java.io.IOException" %>
+<%@ page import="java.io.InputStream" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.*" %>
+<%@ page import="jakarta.servlet.http.Part" %>
+<%@ page import="org.apache.poi.ss.usermodel.*" %>
+<%@ page import="org.apache.poi.xssf.usermodel.XSSFWorkbook" %>
+<%@ page import="com.google.gson.Gson" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="org.apache.poi.ss.usermodel.*" %>
+<%@ page import="org.apache.poi.xssf.usermodel.XSSFWorkbook" %>
+<%@ page import="com.google.gson.Gson" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page isELIgnored="false" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Sales Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Upload Form -->
+    <form action="charts.jsp" method="post" enctype="multipart/form-data">
+        <h3>Upload Sales Excel File</h3>
+        <input type="file" name="file" accept=".xlsx" required />
+        <button type="submit">Upload and Analyze</button>
+    </form>
+
+<%
+    if ("POST".equalsIgnoreCase(request.getMethod())) {
+        Map<String, Integer> productSales = new HashMap<>();
+        Map<String, Integer> monthlySales = new TreeMap<>();
+        Map<Integer, Integer> yearlySales = new TreeMap<>();
+        String topProduct = "";
+
+        // Use jakarta.servlet.http.Part (Tomcat 10+)
+        Part filePart = request.getPart("file");
+        InputStream inputStream = filePart.getInputStream();
+
+        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // Skip header row
+
+                String productName = row.getCell(0).getStringCellValue();
+                Date date = row.getCell(1).getDateCellValue();
+                int quantity = (int) row.getCell(2).getNumericCellValue();
+
+                // Product sales count
+                productSales.put(productName, productSales.getOrDefault(productName, 0) + quantity);
+S
+                // Monthly trend
+                String month = new SimpleDateFormat("yyyy-MM").format(date);
+                monthlySales.put(month, monthlySales.getOrDefault(month, 0) + quantity);
+
+                // Yearly sales
+                int year = Integer.parseInt(new SimpleDateFormat("yyyy").format(date));
+                yearlySales.put(year, yearlySales.getOrDefault(year, 0) + quantity);
+            }
+        }
+
+        // Most sold product
+        topProduct = Collections.max(productSales.entrySet(), Map.Entry.comparingByValue()).getKey();
+
+        // Pass data to JS
+        Gson gson = new Gson();
+        String productLabels = gson.toJson(productSales.keySet());
+        String productValues = gson.toJson(productSales.values());
+        String monthLabels = gson.toJson(monthlySales.keySet());
+        String monthValues = gson.toJson(monthlySales.values());
+        String yearLabels = gson.toJson(yearlySales.keySet());
+        String yearValues = gson.toJson(yearlySales.values());
+%>
+
+    <h2>Most Sold Product: <%= topProduct %></h2>
+    <canvas id="productChart"></canvas>
+    <canvas id="monthlyChart"></canvas>
+    <canvas id="yearlyChart"></canvas>
+
+    <script>
+        const productLabels = <%= productLabels %>;
+        const productData = <%= productValues %>;
+
+        const monthLabels = <%= monthLabels %>;
+        const monthData = <%= monthValues %>;
+
+        const yearLabels = <%= yearLabels %>;
+        const yearData = <%= yearValues %>;
+
+        new Chart(document.getElementById("productChart"), {
+            type: "bar",
+            data: {
+                labels: productLabels,
+                datasets: [{
+                    label: "Sales per Product",
+                    data: productData,
+                    backgroundColor: "skyblue"
+                }]
+            }
+        });
+
+        new Chart(document.getElementById("monthlyChart"), {
+            type: "line",
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: "Monthly Sales",
+                    data: monthData,
+                    borderColor: "green",
+                    fill: false
+                }]
+            }
+        });
+
+        new Chart(document.getElementById("yearlyChart"), {
+            type: "bar",
+            data: {
+                labels: yearLabels,
+                datasets: [{
+                    label: "Yearly Sales",
+                    data: yearData,
+                    backgroundColor: "orange"
+                }]
+            }
+        });
+    </script>
+
+<% } %>
+</body>
+</html>

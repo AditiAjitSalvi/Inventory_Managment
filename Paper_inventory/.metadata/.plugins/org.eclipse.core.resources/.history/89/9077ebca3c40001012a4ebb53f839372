@@ -1,0 +1,83 @@
+<%@page import="com.mysql.cj.xdevapi.JsonArray"%>
+<%@page import="com.google.gson.JsonArray"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+    <%@ page
+	import="java.text.SimpleDateFormat, java.io.StringWriter, java.io.PrintWriter, java.sql.*, com.mysql.cj.jdbc.Driver"%>
+    
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    Connection con = null;
+    PreparedStatement psOrder = null, psItem = null, psUpdateQty = null;
+    ResultSet rs = null;
+    int purchaseOrderId = 0;
+
+    String orderData = request.getParameter("orderData");
+
+    try {
+        Class.forName("com.mysql.jdbc.Driver");
+        con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+
+        JsonArray items = new JsonArray(orderData);
+
+        // Step 1: Insert into purchase_orders (only order_date is required)
+        String insertOrderSQL = "INSERT INTO purchase_orders (order_date) VALUES (NOW())";
+        psOrder = con.prepareStatement(insertOrderSQL, Statement.RETURN_GENERATED_KEYS);
+        psOrder.executeUpdate();
+
+        rs = psOrder.getGeneratedKeys();
+        if (rs.next()) {
+            purchaseOrderId = rs.getInt(1);
+        }
+
+        // Step 2: Insert into purchase_order_items and update product stock
+        String insertItemSQL = "INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity) VALUES (?, ?, ?)";
+        String updateStockSQL = "UPDATE products SET quantity = quantity + ? WHERE product_id = ?";
+
+        psItem = con.prepareStatement(insertItemSQL);
+        psUpdateQty = con.prepareStatement(updateStockSQL);
+
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            int productId = item.getInt("productId");
+            int quantity = item.getInt("quantity");
+
+            // Insert order item
+            psItem.setInt(1, purchaseOrderId);
+            psItem.setInt(2, productId);
+            psItem.setInt(3, quantity);
+            psItem.executeUpdate();
+
+            // Update product stock quantity
+            psUpdateQty.setInt(1, quantity);
+            psUpdateQty.setInt(2, productId);
+            psUpdateQty.executeUpdate();
+        }
+%>
+    <div style="padding: 20px; font-family: Arial;">
+        <h3>Order Saved Successfully!</h3>
+        <p>Order ID: <strong><%= purchaseOrderId %></strong></p>
+        <a href="CreateOrder.jsp" class="btn btn-primary">Create Another Order</a>
+    </div>
+<%
+    } catch (Exception e) {
+        out.println("<p style='color:red;'>Error: " + e.getMessage() + "</p>");
+    } finally {
+        if (rs != null) try { rs.close(); } catch (Exception e) {}
+        if (psOrder != null) try { psOrder.close(); } catch (Exception e) {}
+        if (psItem != null) try { psItem.close(); } catch (Exception e) {}
+        if (psUpdateQty != null) try { psUpdateQty.close(); } catch (Exception e) {}
+        if (con != null) try { con.close(); } catch (Exception e) {}
+    }
+%>
+
+</body>
+</html>

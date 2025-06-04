@@ -1,0 +1,159 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
+<%@ page import="com.mysql.cj.jdbc.Driver" %>
+<%@ page import="java.sql.*"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="com.mysql.cj.jdbc.Driver"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.Connection"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Purchase Order</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background-color: #3b82f6;
+      color: white;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="sidebar p-3">
+      <h2>Dashboard</h2>
+      <ul class="nav flex-column">
+        <li class="nav-item"><a href="Home.jsp" class="nav-link text-white">Home</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-white">Supplier</a></li>
+        <li class="nav-item"><a href="Product.jsp" class="nav-link text-white">Products</a></li>
+        <li class="nav-item"><a href="Retailer.jsp" class="nav-link text-white">Retailer</a></li>
+        <li class="nav-item"><a href="Order.jsp" class="nav-link text-white">Orders</a></li>
+        <li class="nav-item"><a href="Billing.jsp" class="nav-link text-white">Billing</a></li>
+        <li class="nav-item"><a href="Login.html" class="nav-link text-white">Logout</a></li>
+      </ul>
+    </div>
+
+    <div class="main-content container mt-5">
+      <h2>Create Purchase Order</h2>
+      <form action="SavePurchase.jsp" method="post" id="purchaseForm">
+        <div class="mb-3">
+          <label for="product" class="form-label">Select Product:</label>
+          <select class="form-control" id="product">
+            <option value="" disabled selected>Choose a Product</option>
+            <%
+              try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+                Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT product_id, product_name FROM products");
+                while (rs.next()) {
+            %>
+              <option value="<%= rs.getInt("product_id") %>" data-name="<%= rs.getString("product_name") %>">
+                <%= rs.getString("product_name") %>
+              </option>
+            <%
+                }
+                con.close();
+              } catch (Exception e) {
+                out.println("Error loading products: " + e.getMessage());
+              }
+            %>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity:</label>
+          <input type="number" class="form-control" id="quantity" min="1" placeholder="Enter quantity">
+        </div>
+
+        <button type="button" class="btn btn-success mb-3" onclick="addProduct()">Add Product</button>
+
+        <table class="table table-bordered mt-3" id="productTable">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary">Place Order</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let purchaseProducts = [];
+
+    function addProduct() {
+      const productSelect = document.getElementById('product');
+      const selectedOption = productSelect.options[productSelect.selectedIndex];
+      const quantityInput = document.getElementById('quantity');
+      const tableBody = document.getElementById('productTable').getElementsByTagName('tbody')[0];
+
+      const productId = productSelect.value;
+      const productName = selectedOption.getAttribute('data-name') || selectedOption.text;
+      const quantity = parseInt(quantityInput.value);
+
+      if (!productId) {
+        alert("Please select a product.");
+        return;
+      }
+      if (isNaN(quantity) || quantity <= 0) {
+        alert("Please enter a valid quantity.");
+        return;
+      }
+      if (purchaseProducts.some(p => p.productId === productId)) {
+        alert("Product already added. Remove it before adding again.");
+        return;
+      }
+
+      purchaseProducts.push({ productId, productName, quantity });
+
+      const newRow = tableBody.insertRow();
+      newRow.setAttribute("data-product-id", productId);
+
+      newRow.innerHTML = `
+        <td>${productName}<input type="hidden" name="productId[]" value="${productId}"></td>
+        <td>${quantity}<input type="hidden" name="quantity[]" value="${quantity}"></td>
+        <td><button type="button" class="btn btn-danger btn-sm" onclick="removeProduct(this)">Remove</button></td>
+      `;
+
+      productSelect.selectedIndex = 0;
+      quantityInput.value = "";
+    }
+
+    function removeProduct(button) {
+      const row = button.closest("tr");
+      const productId = row.getAttribute("data-product-id");
+      purchaseProducts = purchaseProducts.filter(p => p.productId !== productId);
+      row.remove();
+    }
+  </script>
+</body>
+</html>
