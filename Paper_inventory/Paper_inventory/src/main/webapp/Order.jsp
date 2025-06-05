@@ -272,20 +272,20 @@ body {
 				</button>
 			</div>
 			<div class="sidebar-menu">
-				<a href="Home.jsp" class="sidebar-link active"> <i class="fa fa-home"></i>
-					<span class="link-text">Home</span>
-				</a> <a href="Purchase_order.jsp" class="sidebar-link"> <i class="fa fa-chart-bar"></i>
-					<span class="link-text">Supplier</span>
-				</a> <a href="Product.jsp" class="sidebar-link"> <i class="fa fa-shopping-bag"></i>
-					<span class="link-text">Products</span>
-				</a> <a href="Retailer.jsp" class="sidebar-link"> <i class="fa fa-users"></i> <span
-					class="link-text">Retailer</span> 
-					<a href="Order.jsp" class="sidebar-link">
-						<i class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
+				<a href="Home.jsp" class="sidebar-link active"> <i
+					class="fa fa-home"></i> <span class="link-text">Home</span>
+				</a> <a href="Purchase_order.jsp" class="sidebar-link"> <i
+					class="fa fa-chart-bar"></i> <span class="link-text">Supplier</span>
+				</a> <a href="Product.jsp" class="sidebar-link"> <i
+					class="fa fa-shopping-bag"></i> <span class="link-text">Products</span>
+				</a> <a href="Retailer.jsp" class="sidebar-link"> <i
+					class="fa fa-users"></i> <span class="link-text">Retailer</span> <a
+					href="Order.jsp" class="sidebar-link"> <i
+						class="fa fa-shopping-cart"></i> <span class="link-text">Orders</span>
 				</a>
 
-				</a> <a href="Billing.jsp" class="sidebar-link"> <i class="fa fa-file-invoice"></i>
-					<span class="link-text">Billing</span>
+				</a> <a href="Billing.jsp" class="sidebar-link"> <i
+					class="fa fa-file-invoice"></i> <span class="link-text">Billing</span>
 				</a> <a href="Login.html" class="sidebar-link"> <i
 					class="fa fa-sign-out-alt"></i> <span class="link-text">Logout</span>
 				</a>
@@ -293,349 +293,206 @@ body {
 		</div>
 
 
-		<div class="container">
-			<h2>Place Order</h2>
-			<form action="SaveOrder.jsp" method="post" id="orderForm">
+<div class="container">
+    <h2>Place Order</h2>
+    <form action="SaveOrder.jsp" method="post">
 
+        <!-- Retailer Dropdown -->
+        <div class="form-group mb-3">
+            <label for="retailer">Select Retailer:</label>
+            <select class="form-control" id="retailer" name="retailerId" required onchange="setCustomerFromRetailer()">
+                <option value="" disabled selected>Choose Retailer</option>
+                <%
+                    try {
+                        Class.forName("com.mysql.jdbc.Driver");
+                        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+                        Statement stmt = con.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
+                        while (rs.next()) {
+                %>
+                <option value="<%=rs.getInt("id")%>" data-contact="<%=rs.getString("contact_name")%>">
+                    <%=rs.getString("name")%>
+                </option>
+                <%
+                        }
+                        con.close();
+                    } catch (Exception e) {
+                        out.println("Error loading retailers.");
+                    }
+                %>
+            </select>
+        </div>
 
-				<!-- Retailer Dropdown -->
-				<div class="form-group mb-3">
-					<label for="retailer">Select Retailer:</label> <select
-						class="form-control" id="retailer" name="retailerId" required
-						onchange="setCustomerFromRetailer()">
-						<option value="" disabled selected>Choose Retailer</option>
-						<%
-						try {
-							Class.forName("com.mysql.jdbc.Driver");
-							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
-							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery("SELECT id, name, contact_name FROM retailers");
-							while (rs.next()) {
-						%>
-						<option value="<%=rs.getInt("id")%>"
-							data-contact="<%=rs.getString("contact_name")%>">
-							<%=rs.getString("name")%>
-						</option>
-						<%
-						}
-						con.close();
-						} catch (Exception e) {
-						out.println("Error loading retailers.");
-						}
-						%>
-					</select>
-				</div>
+        <!-- Auto-filled Customer Contact Name -->
+        <div class="form-group mb-3">
+            <label for="customer">Customer Contact Name:</label>
+            <input type="text" class="form-control" id="customer" name="customerName" readonly />
+        </div>
 
-				<!-- Auto-filled Customer Contact Name -->
-				<div class="form-group mb-3">
-					<label for="customer">Customer Contact Name:</label> <input
-						type="text" class="form-control" id="customer" name="customerName"
-						readonly />
-				</div>
-
-				<!-- Product Dropdown -->
-				<div class="form-group mb-3">
-					<label for="product">Select Product:</label> <select
-						class="form-control" id="product">
-						<%
-						try {
-							Class.forName("com.mysql.jdbc.Driver");
-							Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
-							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery("SELECT product_id, product_name,quantity_in_stock,unit_price FROM products");
-							while (rs.next()) {
-							 
-						%>
-						<option value="<%=rs.getInt("product_id")%>"
+       <!-- Product Dropdown -->
+<div class="form-group mb-3">
+    <label for="product">Select Product:</label>
+    <select class="form-control" id="product" onchange="updatePriceWithMargin()">
+        <%
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+                Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3307/inventory", "root", "");
+                Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT product_id, product_name,quantity_in_stock, unit_price FROM products");
+                while (rs.next()) {
+        %>
+       <option value="<%=rs.getInt("product_id")%>"
 							data-price="<%=rs.getDouble("unit_price")%>"
 							data-stock="<%=rs.getInt("quantity_in_stock")%>">
 							<%=rs.getString("product_name")%>
 						</option>
-						<%
-						}
-						con.close();
-						} catch (Exception e) {
-						out.println("Error loading products.");
-						}
-						%>
-					</select>
-				</div>
-
-				<!-- Price and Quantity Inputs -->
-				<div class="form-group mb-3">
-					<label for="price">Unit Price (with 12% margin):</label> <input
-						type="number" class="form-control" id="price" step="0.01" readonly>
-				</div>
+        <%
+                }
+                con.close();
+            } catch (Exception e) {
+                out.println("Error loading products.");
+            }
+        %>
+    </select>
+</div>
 
 
-				<div class="form-group mb-3">
-					<label for="quantity">Quantity:</label> <input type="number"
-						class="form-control" id="quantity">
-				</div>
+        <!-- Price and Quantity Inputs -->
+        <div class="form-group mb-3">
+            <label for="price">Unit Price:</label>
+            <input type="number" class="form-control" id="price" step="0.01">
+        </div>
 
-				<!-- Add Product -->
-				<button type="button" class="btn btn-success mb-3"
-					onclick="addProduct()">Add Product</button>
+        <div class="form-group mb-3">
+            <label for="quantity">Quantity:</label>
+            <input type="number" class="form-control" id="quantity">
+        </div>
 
-				<!-- Product Table -->
-				<table class="table table-bordered" id="productTable">
-					<thead>
-						<tr>
-							<th>Product</th>
-							<th>Unit Price</th>
-							<th>Quantity</th>
-							<th>Subtotal</th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
+        <button type="button" class="btn btn-success mb-3" onclick="addProduct()">Add Product</button>
 
-				<!-- Total -->
-				<div class="form-group">
-					<h5>
-						Total: ₹ <span id="total">0.00</span>
-					</h5>
-				</div>
+        <!-- Product Table -->
+        <table class="table table-bordered" id="productTable">
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- JS will populate rows -->
+            </tbody>
+        </table>
 
-				<!-- Submit -->
-				<button type="submit" class="btn btn-primary">Submit Order</button>
-			</form>
-			<div class="card">
-				<div class="card-body p-0">
-					<div class="table-responsive">
-						<table class="table customer-table mb-0">
-							<thead>
-								<tr>
-									<th>
-										<div class="form-check">
-											<input class="form-check-input" type="checkbox"
-												id="selectAll"> <label class="form-check-label"
-												for="selectAll"></label>
-										</div>
-									</th>
-									<th>id</th>
-									<th>reatiler_id</th>
-									<th>order_date</th>
-									<th>total_amount</th>
-									<th>Quntity of order</th>
+        <!-- Total -->
+        <div class="form-group">
+            <h5>Total: ₹ <span id="total">0.00</span></h5>
+        </div>
 
-								</tr>
-							</thead>
-							<tbody>
-								<%
-								Connection conn = null;
-								Statement stmt = null;
-								ResultSet rs = null;
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary">Submit Order</button>
+    </form>
+</div>
 
-								String driverNm = "com.mysql.cj.jdbc.Driver";
-								String url = "jdbc:mysql://localhost:3307/inventory";
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-								try {
-									Class.forName(driverNm);
-									conn = DriverManager.getConnection(url, "root", "");
-									stmt = conn.createStatement();
-									rs = stmt.executeQuery("SELECT o.*, IFNULL(q.total_quantity, 0) AS total_quantity " + "FROM orders o "
-									+ "LEFT JOIN (" + "  SELECT order_id, SUM(quantity) AS total_quantity " + "  FROM order_items "
-									+ "  GROUP BY order_id" + ") q ON o.id = q.order_id");
+<script>
+    function setCustomerFromRetailer() {
+        var retailerSelect = document.getElementById("retailer");
+        var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
+        var contactName = selectedOption.getAttribute("data-contact");
+        document.getElementById("customer").value = contactName;
+    }
 
-									while (rs.next()) {
-								%>
+ // ✅ Product price calculation with margin
+    document.getElementById('product').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const basePrice = parseFloat(selectedOption.getAttribute('data-price'));
+        const stockSize = parseInt(selectedOption.getAttribute('data-stock'));
+
+        if (!isNaN(basePrice) && !isNaN(stockSize) && stockSize > 0) {
+            const totalWithMargin = basePrice + (basePrice * 0.12);
+            const unitPrice = totalWithMargin / stockSize;
+            const roundedPrice = Math.round(unitPrice);
+            document.getElementById('price').value = roundedPrice;
+        } else {
+            document.getElementById('price').value = '';
+        }
+    });
+
+    let totalAmount = 0;
+
+    function addProduct() {
+        const productDropdown = document.getElementById("product");
+        const selectedOption = productDropdown.options[productDropdown.selectedIndex];
+        const productName = selectedOption.text;
+        const productId = selectedOption.value;
+
+        const priceInput = document.getElementById("price");
+        const quantityInput = document.getElementById("quantity");
+
+        const price = parseFloat(priceInput.value);
+        const quantity = parseInt(quantityInput.value);
+
+        if (!price || !quantity || price <= 0 || quantity <= 0) {
+            alert("Please enter valid price and quantity");
+            return;
+        }
+
+        const subtotal = price * quantity;
+        totalAmount += subtotal;
+
+        const tableBody = document.getElementById("productTable").getElementsByTagName("tbody")[0];
+        const newRow = tableBody.insertRow();
+
+        
+        const productCell = newRow.insertCell(0);
+        const priceCell = newRow.insertCell(1);
+        const quantityCell = newRow.insertCell(2);
+        const subtotalCell = newRow.insertCell(3);
+
+        productCell.innerText = productName;
+        priceCell.innerText = price.toFixed(2);
+        quantityCell.innerText = quantity;
+        subtotalCell.innerText = subtotal.toFixed(2);
+
+        document.getElementById("total").innerText = totalAmount.toFixed(2);
+
+     // Append hidden inputs to the form
+        const form = document.querySelector("form");
+
+        const inputProductId = document.createElement("input");
+        inputProductId.type = "hidden";
+        inputProductId.name = "productId[]";
+        inputProductId.value = productId;
+        form.appendChild(inputProductId);
+
+    	const hiddenUnitPrice = document.createElement("input");
+		hiddenUnitPrice.type = "hidden";
+		hiddenUnitPrice.name = "unitPrice[]";
+		hiddenUnitPrice.value = price.toFixed(2);
+		form.appendChild(hiddenUnitPrice);
+
+		const hiddenQuantity = document.createElement("input");
+		hiddenQuantity.type = "hidden";
+		hiddenQuantity.name = "quantity[]";
+		hiddenQuantity.value = quantity;
+		form.appendChild(hiddenQuantity);
+
+		const hiddenSubtotal = document.createElement("input");
+		hiddenSubtotal.type = "hidden";
+		hiddenSubtotal.name = "subtotal[]";
+		hiddenSubtotal.value = subtotal.toFixed(2);
+		form.appendChild(hiddenSubtotal);
+
+        priceInput.value = "";
+        quantityInput.value = "";
+    }
+</script>
 
 
-								<tr>
-									<td>
-										<div class="form-check">
-											<input class="form-check-input" type="checkbox">
-										</div>
-									</td>
-									<td><%=rs.getString("id")%></td>
-									<td><%=rs.getString("retailer_id")%></td>
-									<td><%=rs.getString("order_date")%></td>
-									<td><%=rs.getInt("total_amount")%></td>
-									<td><%=rs.getInt("total_quantity")%></td>
-									<td>
-										<form action="deleteOrder.jsp" method="post"
-											onsubmit="return confirm('Are you sure you want to delete this order?');">
-											<input type="hidden" name="orderId"
-												value="<%=rs.getString("id")%>">
-											<button type="submit" class="btn btn-danger btn-sm">Delete</button>
-										</form>
-									</td>
-
-								</tr>
-								<%
-								}
-								} catch (Exception e) {
-								out.println("Error: " + e.getMessage());
-								} finally {
-								try {
-								if (rs != null)
-									rs.close();
-								} catch (Exception e) {
-								}
-								try {
-								if (stmt != null)
-									stmt.close();
-								} catch (Exception e) {
-								}
-								try {
-								if (conn != null)
-									conn.close();
-								} catch (Exception e) {
-								}
-								}
-								%>
-
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-
-		<!-- Bootstrap JS -->
-		<script
-			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-		<script>
-			// Wait for the DOM to be fully loaded
-			document.addEventListener('DOMContentLoaded', function() {
-				// Sidebar toggle functionality
-				const sidebarToggle = document.getElementById('sidebarToggle');
-				const sidebar = document.getElementById('sidebar');
-
-				sidebarToggle.addEventListener('click', function() {
-					sidebar.classList.toggle('collapsed');
-				});
-
-				// Check if we're on mobile
-				function checkMobile() {
-					if (window.innerWidth < 768) {
-						sidebar.classList.add('collapsed');
-					} else {
-						sidebar.classList.remove('collapsed');
-					}
-				}
-
-				// Initial check
-				checkMobile();
-
-				// Listen for window resize
-				window.addEventListener('resize', checkMobile);
-
-				
-			
-			// Set customer input from selected retailer's contact
-			function setCustomerFromRetailer() {
-				var retailerSelect = document.getElementById("retailer");
-				var selectedOption = retailerSelect.options[retailerSelect.selectedIndex];
-				var contactName = selectedOption.getAttribute("data-contact");
-				document.getElementById("customer").value = contactName;
-			}
-		 
-			document.getElementById('product').addEventListener('change', function () {
-				const selectedOption = this.options[this.selectedIndex];
-				const basePrice = parseFloat(selectedOption.getAttribute('data-price'));
-				const stockSize = parseInt(selectedOption.getAttribute('data-stock'));
-
-				if (!isNaN(basePrice) && !isNaN(stockSize) && stockSize > 0) {
-					const totalWithMargin = basePrice + (basePrice * 0.12); // add 12% margin
-					const unitPrice = totalWithMargin / stockSize; // divide by quantity_in_stock
-					const roundedPrice = Math.round(unitPrice); // round to nearest whole number
-					document.getElementById('price').value = roundedPrice;
-				} else {
-					document.getElementById('price').value = '';
-				}
-			});
-			let totalAmount = 0;
-
-			function addProduct() {
-				const productDropdown = document.getElementById("product");
-				const selectedOption = productDropdown.options[productDropdown.selectedIndex];
-				const productName = selectedOption.text;
-				const productId = selectedOption.value;
-
-				const priceInput = document.getElementById("price");
-				const quantityInput = document.getElementById("quantity");
-
-				const price = parseFloat(priceInput.value);
-				const quantity = parseInt(quantityInput.value);
-
-				if (!price || !quantity || price <= 0 || quantity <= 0) {
-					alert("Please enter valid price and quantity");
-					return;
-				}
-
-				const subtotal = price * quantity;
-				totalAmount += subtotal;
-
-				// Add row to table
-				const tableBody = document.getElementById("productTable")
-						.getElementsByTagName("tbody")[0];
-				const newRow = tableBody.insertRow();
-
-				newRow.insertCell(0).innerText = productName;
-				newRow.insertCell(1).innerText = price.toFixed(2);
-				newRow.insertCell(2).innerText = quantity;
-				newRow.insertCell(3).innerText = subtotal.toFixed(2);
-
-				// Add a remove button
-				const actionCell = newRow.insertCell(4);
-				const removeBtn = document.createElement("button");
-				removeBtn.type = "button";
-				removeBtn.className = "btn btn-danger btn-sm";
-				removeBtn.innerText = "Remove";
-
-				// Append hidden inputs to form for submission
-				const form = document.getElementById("orderForm");
-
-				const hiddenProductId = document.createElement("input");
-				hiddenProductId.type = "hidden";
-				hiddenProductId.name = "productId[]";
-				hiddenProductId.value = productId;
-				form.appendChild(hiddenProductId);
-
-				const hiddenUnitPrice = document.createElement("input");
-				hiddenUnitPrice.type = "hidden";
-				hiddenUnitPrice.name = "unitPrice[]";
-				hiddenUnitPrice.value = price.toFixed(2);
-				form.appendChild(hiddenUnitPrice);
-
-				const hiddenQuantity = document.createElement("input");
-				hiddenQuantity.type = "hidden";
-				hiddenQuantity.name = "quantity[]";
-				hiddenQuantity.value = quantity;
-				form.appendChild(hiddenQuantity);
-
-				const hiddenSubtotal = document.createElement("input");
-				hiddenSubtotal.type = "hidden";
-				hiddenSubtotal.name = "subtotal[]";
-				hiddenSubtotal.value = subtotal.toFixed(2);
-				form.appendChild(hiddenSubtotal);
-
-				removeBtn.onclick = function() {
-					totalAmount -= subtotal;
-					document.getElementById("total").innerText = totalAmount
-							.toFixed(2);
-					newRow.remove();
-					// Remove corresponding hidden inputs
-					form.removeChild(hiddenProductId);
-					form.removeChild(hiddenUnitPrice);
-					form.removeChild(hiddenQuantity);
-					form.removeChild(hiddenSubtotal);
-				};
-
-				actionCell.appendChild(removeBtn);
-
-				// Update total amount display
-				document.getElementById("total").innerText = totalAmount
-						.toFixed(2);
-
-				// Clear inputs
-				priceInput.value = "";
-				quantityInput.value = "";
-			}
-		</script>
 </body>
 </html>
+
